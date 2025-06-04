@@ -104,7 +104,7 @@ namespace dave_game
     void DaveGame::prepareBoxWorld()
     {
         b2WorldDef worldDef = b2DefaultWorldDef();
-        worldDef.gravity = {0,9.8f};
+        worldDef.gravity = {0, 9.8};
         boxWorld = b2CreateWorld(&worldDef);
     }
 
@@ -151,18 +151,9 @@ namespace dave_game
             if (World::mask(e).test(mask)) {
                 auto& i = World::getComponent<Intent>(e);
                 const auto& c = World::getComponent<Collider>(e);
-
                 bool isDave = World::mask(e).test(Component<Dave>::Bit);
 
                 float JUMP_IMPULSE = 230.5f;
-
-                if (i.up) {
-                    // b2Vec2 impulse = {0, -JUMP_IMPULSE}; // negative Y is up in Box2D
-                    // b2Body_ApplyLinearImpulse(c.b, impulse, b2Body_GetPosition(c.b), true);
-
-                    b2Body_SetLinearVelocity(c.b,{0, -15});
-
-                }
 
                 const auto& vel = b2Body_GetLinearVelocity(c.b);
 
@@ -170,22 +161,33 @@ namespace dave_game
                 b2Body_SetLinearVelocity(c.b, {x,vel.y});
 
 
-
                 if (isDave) {
-                    
+
                     auto& anim = World::getComponent<Animation>(e);
+                    auto& groundStatus = World::getComponent<GroundStatus>(e);
+
+                    if (i.up && groundStatus.onGround) {
+                        // b2Vec2 impulse = {0, -JUMP_IMPULSE}; // negative Y is up in Box2D
+                        // b2Body_ApplyLinearImpulse(c.b, impulse, b2Body_GetPosition(c.b), true);
+
+                        b2Body_SetLinearVelocity(c.b,{0, -15});
+                        groundStatus.onGround = false;
+                    }
 
                     if (vel.x >= -ANIMATION_VELOCITY_THRESHOLD && vel.x <= ANIMATION_VELOCITY_THRESHOLD && vel.y >= -ANIMATION_VELOCITY_THRESHOLD && vel.y <= ANIMATION_VELOCITY_THRESHOLD) {
                         // If not moving, set to idle state
                         if (anim.currentState != 0) {
                             anim.currentState = 0; // IDLE
                             anim.currentFrame = 0;
+                            groundStatus.onGround = true;
                         }
+
                     } else if (vel.y >= -ANIMATION_VELOCITY_THRESHOLD && vel.y <= ANIMATION_VELOCITY_THRESHOLD) {
                         // If moving, set to walk state
                         if (anim.currentState != 1) {
                             anim.currentState = 1; // WALK
                             anim.currentFrame = 0;
+                            groundStatus.onGround = true;
                         }
                     }
                     else {
@@ -193,6 +195,7 @@ namespace dave_game
                         if (anim.currentState != 2) {
                             anim.currentState = 2; // JUMP
                             anim.currentFrame = 0;
+                            groundStatus.onGround = false;
                         }
                     }
 
@@ -476,7 +479,8 @@ namespace dave_game
          Intent{},
          Animation{DAVE_ANIMATION, 1, 4, 0, 0, Animation::Type::DAVE}, // 1 state, 4 frames, current state 0, current frame 0
          Input{SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_RIGHT, SDL_SCANCODE_LEFT},
-         Dave{}
+         Dave{},
+         GroundStatus{true}
          );
         //b2Body_SetUserData(pacmanBody, new ent_type{e.entity()});
 

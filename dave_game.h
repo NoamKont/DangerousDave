@@ -128,6 +128,12 @@ namespace dave_game {
 /// @brief Marks the entity as dead (for cleanup or state transition).
     struct Dead {};
 
+/// @brief Marks whether Dave is on the ground
+
+    struct GroundStatus {
+        bool onGround = false;
+    };
+
 
 
 

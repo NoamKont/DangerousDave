@@ -229,7 +229,7 @@ namespace dave_game
 
         SDL_RenderClear(ren);
 
-        //SDL_SetRenderDrawColor(ren,0,255,0,0);
+        SDL_SetRenderDrawColor(ren,0,255,0,0);
 
         for (int i = 0; i <= World::maxId().id; ++i)
         {
@@ -395,12 +395,6 @@ namespace dave_game
     }
 
     void DaveGame::createMap() {
-
-        // Entity e = Entity::create();
-        // e.addAll(
-        //     Position{{},0},
-        //     Grid{DaveGame::map}
-        // );
 
         for (int row = 0; row < DaveGame::MAP_HEIGHT; ++row) {
             for (int col = 0; col < DaveGame::MAP_WIDTH; ++col) {

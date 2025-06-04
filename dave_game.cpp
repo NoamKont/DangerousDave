@@ -49,7 +49,8 @@ namespace dave_game
         SDL_srand(time(nullptr));
 
         prepareBoxWorld();
-        prepareWalls();
+        //prepareWalls();
+        createMap();
 
 
         createDave();
@@ -153,12 +154,7 @@ namespace dave_game
 
                 bool isDave = World::mask(e).test(Component<Dave>::Bit);
 
-                float JUMP_IMPULSE = 230.5f;
-
                 if (i.up) {
-                    // b2Vec2 impulse = {0, -JUMP_IMPULSE}; // negative Y is up in Box2D
-                    // b2Body_ApplyLinearImpulse(c.b, impulse, b2Body_GetPosition(c.b), true);
-
                     b2Body_SetLinearVelocity(c.b,{0, -15});
 
                 }
@@ -224,46 +220,6 @@ namespace dave_game
         }
     }
 
-    // /// @brief Handles collisions between entities with Position and Collision.
-
-    // /// Optionally reacts to Collectible or Hazard components.
-
-    // void CollisionSystem()
-
-    // {
-
-    //     MaskBuilder builder;
-
-    //     builder.set<Position>().set<Collision>();
-
-    //     Mask required = builder.build();
-
-    //
-
-    //     for (int i = 0; i < World::maxId().id; ++i)
-
-    //     {
-
-    //         ent_type e{i};
-
-    //         if (!World::mask(e).test(required))
-
-    //         {
-
-    //             continue;
-
-    //         }
-
-    //
-
-    //         bool hasCollectible = World::mask(e).test(Component<Collectible>::Bit);
-
-    //         bool hasHazard = World::mask(e).test(Component<Hazard>::Bit);
-
-    //     }
-
-    // }
-
     /// @brief Renders entities with Image, Position, and GameInfo components.
     /// Also checks optional components like Course, Collision, Gun, and Jetpack.
     void DaveGame::RenderSystem()
@@ -304,137 +260,6 @@ namespace dave_game
         SDL_RenderPresent(ren);
     }
 
-    //
-
-    //
-
-    // /// @brief Manages score, level, and lives using the GameInfo component.
-
-    // /// Checks optional Health, Door, and PrizeValue components.
-
-    // void ScoreSystem()
-
-    // {
-
-    //     MaskBuilder builder;
-
-    //     builder.set<GameInfo>();
-
-    //     Mask required = builder.build();
-
-    //
-
-    //     for (int i = 0; i < World::maxId().id; ++i)
-
-    //     {
-
-    //         ent_type e{i};
-
-    //         if (!World::mask(e).test(required))
-
-    //         {
-
-    //             continue;
-
-    //         }
-
-    //
-
-    //         bool hasHealth = World::mask(e).test(Component<Health>::Bit);
-
-    //         bool hasDoor = World::mask(e).test(Component<Door>::Bit);
-
-    //         bool hasPrizeValue = World::mask(e).test(Component<PrizeValue>::Bit);
-
-    //     }
-
-    // }
-
-    //
-
-    // /// @brief Handles item collection (prizes, weapons, trophies) and level progression.
-
-    // /// Requires Collision, Position, and Collectible. Checks optional Gun, Jetpack, Door, and Unlocks.
-
-    // void CollectSystem()
-
-    // {
-
-    //     MaskBuilder builder;
-
-    //     builder.set<Collision>().set<Position>().set<Collectible>();
-
-    //     Mask required = builder.build();
-
-    //
-
-    //     for (int i = 0; i < World::maxId().id; ++i)
-
-    //     {
-
-    //         ent_type e{i};
-
-    //         if (!World::mask(e).test(required))
-
-    //         {
-
-    //             continue;
-
-    //         }
-
-    //
-
-    //         bool hasGun = World::mask(e).test(Component<Gun>::Bit);
-
-    //         bool hasJetpack = World::mask(e).test(Component<Jetpack>::Bit);
-
-    //         bool hasDoor = World::mask(e).test(Component<Door>::Bit);
-
-    //         bool hasUnlocks = World::mask(e).test(Component<Unlocks>::Bit);
-
-    //     }
-
-    // }
-
-    //
-
-    // /// @brief Handles entity death caused by hazards or depleted health.
-
-    // /// Requires Health and Dead components.
-
-    // void DeathSystem()
-
-    // {
-
-    //     MaskBuilder builder;
-
-    //     builder.set<Health>().set<Dead>();
-
-    //     Mask required = builder.build();
-
-    //
-
-    //     for (int i = 0; i < World::maxId().id; ++i)
-
-    //     {
-
-    //         ent_type e{i};
-
-    //         if (!World::mask(e).test(required))
-
-    //         {
-
-    //             continue;
-
-    //         }
-
-    //
-
-    //     }
-
-    // }
-
-    //
 
     /// @brief Updates animation state for entities with visual animations.
     /// Requires Animation and Image components.
@@ -535,7 +360,7 @@ namespace dave_game
     void DaveGame::prepareWalls() const {
         //upper and lower borders
         createWall({WIN_WIDTH  / 2.0f, 0.0f},WIN_WIDTH,5.f);
-        createWall({WIN_WIDTH  / 2.0f, WIN_HEIGHT},WIN_WIDTH ,60.f);
+        createWall({WIN_WIDTH  / 2.0f, WIN_HEIGHT},WIN_WIDTH ,125.f);
         //side borders
         createWall({0.0f, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
         createWall({WIN_WIDTH, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
@@ -564,173 +389,28 @@ namespace dave_game
         e.addAll(
             Position{p, 0},
             Collider{wallBody},
-            Wall{shape, {width, height}}
+            Wall{shape, {width, height}},
+            Drawable{{86,380,11,11},CHARACTER_TEX_SCALE,true,false}
         );
         b2Body_SetUserData(wallBody, new ent_type{e.entity()});
     }
 
+    void DaveGame::createMap() {
 
+        // Entity e = Entity::create();
+        // e.addAll(
+        //     Position{{},0},
+        //     Grid{DaveGame::map}
+        // );
 
-    // Entity createMonster(Position pos, Image img)
+        for (int row = 0; row < DaveGame::MAP_HEIGHT; ++row) {
+            for (int col = 0; col < DaveGame::MAP_WIDTH; ++col) {
+                if (DaveGame::map[row][col]) {
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::CHARACTER_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::CHARACTER_TEX_SCALE};
+                    createWall(p, DaveGame::RED_BLOCK.w * DaveGame::CHARACTER_TEX_SCALE, DaveGame::RED_BLOCK.h * DaveGame::CHARACTER_TEX_SCALE);
+                }
+            }
+        }
 
-
-    // {
-
-
-    //     Entity e = Entity::create();
-
-
-    //
-
-
-    //     e.add(pos);
-
-
-    //     //e.add(Course{});
-
-
-    //     e.add(img);
-
-    //     //e.add(Collision{});
-    //     e.add(Health{1});
-    //     e.add(Hazard{});
-    //     e.add(Gun{});
-    //     //e.add(Animation{});
-    //
-    //     return e;
-    // }
-
-// /// @brief Creates a static block (e.g. ground or wall).
-//     Entity createBlock(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates a collectible prize with a score value.
-//     Entity createPrize(Position pos, Image img, int scoreValue)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Collectible{});
-//         e.add(PrizeValue{scoreValue});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates the game background.
-//     Entity createBackground(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//
-//         return e;
-//     }
-//
-// /// @brief Creates the info UI entity (e.g. score, level).
-//     Entity createInfo(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(GameInfo{});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates a climbable tree.
-//     Entity createTree(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Climbable{});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates a gun pickup.
-//     Entity createGun(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Collectible{});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates a jetpack pickup.
-//     Entity createJetpack(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Collectible{});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates a deadly obstacle.
-//     Entity createObstacle(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Hazard{});
-//         e.add(Animation{});
-//         return e;
-//     }
-//
-// /// @brief Creates a door entity.
-//     Entity createDoor(Position pos, Image img, int scoreToAdd)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Door{});
-//         e.add(PrizeValue{scoreToAdd});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates a trophy entity that unlocks a door.
-//     Entity createTrophy(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Collectible{});
-//         e.add(PrizeValue{100});
-//         e.add(Animation{});
-//         e.add(Unlocks{});
-//
-//         return e;
-//     }
-
-
-
-
+    }
 }

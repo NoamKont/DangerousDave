@@ -84,7 +84,7 @@ namespace dave_game
             cout << SDL_GetError() << endl;
             return false;
             }
-        SDL_Surface *surf = IMG_Load("res/dave.png");
+        SDL_Surface *surf = IMG_Load("res/Dave1.png");
         if (surf == nullptr) {
             cout << SDL_GetError() << endl;
             return false;

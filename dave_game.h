@@ -165,7 +165,7 @@ namespace dave_game {
         static constexpr float	BOX_SCALE = 10;
         static constexpr float	CHARACTER_TEX_SCALE = 6.f;
 
-        static constexpr int WIN_WIDTH = 800;
+        static constexpr int WIN_WIDTH = 1280;
         static constexpr int WIN_HEIGHT = 800;
         static constexpr int FPS = 60;
         static constexpr float ANIMATION_INTERVAL = 10;

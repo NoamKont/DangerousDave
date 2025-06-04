@@ -3,7 +3,10 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
+#include "dave_game.h"
+
 using namespace pacman;
+using namespace dave_game;
 using namespace std;
 
 int runDave();
@@ -13,7 +16,13 @@ int main() {
 	// if (p.valid())
 	// 	p.run();
 	// return 0;
-    return runDave();
+    //return runDave();
+
+    DaveGame daveGame;
+    if (daveGame.valid()) {
+        daveGame.run();
+    }
+    return 0;
 }
 int runDave() {
 	SDL_FRect srcDaveWalk2 = { 52, 12.2, 22, 15 };

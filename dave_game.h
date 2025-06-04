@@ -10,40 +10,83 @@
  */
 
 #include "bagel.h"
+#include "box2d/id.h"
+#include "SDL3/SDL_render.h"
+using namespace bagel;
+namespace dave_game {
 
-namespace dave_game
-{
-    using namespace bagel;
-    /// @brief Player control marker – this entity receives keyboard input.
-    struct Control {};
+    /**
+     * @brief Component representing an entity's position on the grid.
+     */
+    using Position = struct {SDL_FPoint p; float a;};
 
-/// @brief The location of the entity on screen in pixels.
-    struct Position {
-        int x = 0;
-        int y = 0;
+    /**
+     * @brief Component representing sprite animation state for rendering.
+     */
+    using Drawable = struct {
+        SDL_FRect part;
+
+        float scale;
+
+        bool visible;
+        bool flip= false;
     };
 
-/// @brief Movement direction and speed (pixels per frame).
-    struct Course {
-        int dx = 0;
-        int dy = 0;
+    using Animation = struct {
+        Drawable** states_frames;
+        int statesCount;
+        int framesCount;
+
+        int currentState = 0;
+        int currentFrame = 0;
     };
 
-/// @brief Visual representation – sprite ID in texture atlas.
-    struct Image {
-        int spriteId = -1; ///< ID of the sprite (e.g., from pong.png)
+
+    /**
+     * @brief Component that defines an entity's hitbox size for collision detection.
+     */
+    using Collider = struct { b2BodyId b; };
+
+
+    /**
+     * @brief Component that stores the last input from a player.
+     */
+    using Input = struct { SDL_Scancode up, down, right, left; };
+
+
+    /**
+     * @brief Component that expresses the current intended action of an entity.
+     */
+    using Intent = struct {
+        bool up = false, down = false, left = false, right = false;
+        bool blockedUp = false, blockedDown = false, blockedLeft = false, blockedRight = false;
     };
 
-/// @brief Enables collision detection for this entity.
-    struct Collision {};
+    /**
+     * @brief Tag component to identify player-controlled entities.
+     */
+    struct Dave { };
+
+    /**
+     * @brief Tag component to identify ghost entities.
+     */
+    struct Ghost { };
+
+    /**
+     * @brief Tag component for wall entities.
+     */
+    struct Wall {b2ShapeId s; SDL_FPoint size;};
+
+    /**
+    * @brief Tag component for Background entities.
+    */
+    struct Background { };
+
 
 /// @brief Health of an entity. When it reaches 0, entity is dead.
     struct Health {
         int hp = STARTING_LIVES;
     };
-
-/// @brief Makes the entity collectable (prize, power-up, etc).
-    struct Collectible {};
 
 /// @brief Indicates that the entity has a gun and can shoot.
     struct Gun {};
@@ -76,58 +119,72 @@ namespace dave_game
         int level = 1;
     };
 
-/// @brief Sprite animation handler (frame index and timing).
-    struct Animation {
-        int frame = 0;
-        float timer = 0.0f;
-    };
-
-/// @brief Player's current intentions (input state).
-    struct Intent {
-        bool moveLeft = false;
-        bool moveRight = false;
-        bool jump = false;
-        bool shoot = false;
-        bool toggleJetpack = false; ///< Key press to toggle jetpack
-    };
-
 /// @brief Marks the entity as dead (for cleanup or state transition).
     struct Dead {};
 
-/// @brief Temporary tag marking door as opened.
-    struct OpenTag {};
 
-/// @brief Links a trophy to the door it unlocks.
-    struct Unlocks {
-        bagel::ent_type doorId = {-1};
+
+
+
+    class DaveGame {
+
+        void prepareBoxWorld();
+
+        void MovementSystem();
+        void CollisionSystem();
+        void RenderSystem();
+        void InputSystem();
+        void ScoreSystem();
+        void CollectSystem();
+        void DeathSystem();
+        void AnimationSystem();
+        void box_system();
+
+
+        void createDave();
+        // Entity createMonster(Position pos, Image img);
+        // Entity createBlock(Position pos, Image img);
+        // Entity createPrize(Position pos, Image img, int scoreValue);
+        // Entity createBackground(Position pos, Image img);
+        // Entity createInfo(Position pos, Image img);
+        // Entity createTree(Position pos, Image img);
+        // Entity createGun(Position pos, Image img);
+        // Entity createJetpack(Position pos, Image img);
+        // Entity createObstacle(Position pos, Image img);
+        // Entity createDoor(Position pos, Image img, int scoreToAdd);
+        // Entity createTrophy(Position pos, Image img);
+
+        static constexpr float	BOX_SCALE = 10;
+        static constexpr float	CHARACTER_TEX_SCALE = 6.f;
+
+        static constexpr int WIN_WIDTH = 800;
+        static constexpr int WIN_HEIGHT = 800;
+        static constexpr int FPS = 60;
+        static constexpr float ANIMATION_INTERVAL = 20;
+
+        static constexpr float GAME_FRAME = 1000.f/FPS;
+        static constexpr float PHYSICS_TIME_STEP = 1.0f / FPS;
+        static constexpr float	RAD_TO_DEG = 57.2958f;
+
+        static inline  Drawable** DAVE_ANIMATION = nullptr;
+
+
+        static constexpr SDL_FRect Dave_IDLE{ 5, 12, 8, 16 };
+
+        SDL_Texture* tex;
+        SDL_Renderer* ren;
+        SDL_Window* win;
+
+        b2WorldId boxWorld = b2_nullWorldId;
+
+    public:
+        DaveGame();
+        ~DaveGame();
+
+        bool prepareWindowAndTexture();
+
+        void run();
+        bool valid() const { return win != nullptr && ren != nullptr && tex != nullptr; }
+
     };
-
-/// @brief Placeholder for sound effect or audio ID
-    struct SoundEffect {
-        int soundId = -1; ///< ID of the sound clip to play
-    };
-
-
-    void MovementSystem();
-    void CollisionSystem();
-    void RenderSystem();
-    void InputSystem();
-    void ScoreSystem();
-    void CollectSystem();
-    void DeathSystem();
-    void AnimationSystem();
-
-    Entity createDave(Position pos, Image img);
-    Entity createMonster(Position pos, Image img);
-    Entity createBlock(Position pos, Image img);
-    Entity createPrize(Position pos, Image img, int scoreValue);
-    Entity createBackground(Position pos, Image img);
-    Entity createInfo(Position pos, Image img);
-    Entity createTree(Position pos, Image img);
-    Entity createGun(Position pos, Image img);
-    Entity createJetpack(Position pos, Image img);
-    Entity createObstacle(Position pos, Image img);
-    Entity createDoor(Position pos, Image img, int scoreToAdd);
-    Entity createTrophy(Position pos, Image img);
-
 }

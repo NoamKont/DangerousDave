@@ -179,7 +179,12 @@ namespace dave_game {
         static inline  Drawable** DAVE_ANIMATION = nullptr;
 
 
-        static constexpr SDL_FRect Dave_IDLE{ 5, 12, 8, 16 };
+        static constexpr SDL_FRect DAVE_STANDING{ 5, 13, 8, 16 };
+        static constexpr SDL_FRect DAVE_WALKING_1{27,13,12,16};
+        static constexpr SDL_FRect DAVE_WALKING_2{78,13,12,16};
+
+        static constexpr SDL_FRect DAVE_IDLE{ 155, 13, 7, 16 };
+        static constexpr SDL_FRect DAVE_JUMPING{127,13,13,14};
 
         SDL_Texture* tex;
         SDL_Renderer* ren;

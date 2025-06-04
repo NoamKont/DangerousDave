@@ -49,7 +49,6 @@ namespace dave_game
         SDL_srand(time(nullptr));
 
         prepareBoxWorld();
-        //prepareWalls();
         createMap();
 
 

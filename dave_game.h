@@ -212,24 +212,24 @@ namespace dave_game {
               false, true,  false,  false, false, true,  false,  false, false,  true  },
 
             /* row 4 */
-            { true,  false, false, true,  false, false, false, true,  true,  false,
-              false, true,  true,  false, false, false, true,  false, true,  true  },
+            { true,  false, false, false,  false, false, false, false,  false,  false,
+              false, false,  false,  false, false, false, false,  false, false,  true  },
 
             /* row 5 */
-            { true,  true,  false, false, false, true,  true,  false, false, true,
-              true,  false, false, true,  true,  false, false, false, true,  true  },
+            { true,  true,  false, false, false, true,  false,  false, false, true,
+              false,  false, false, false,  true,  false, false, false, true,  true  },
 
             /* row 6 */
-            { true,  true,  false, false, false, true,  true,  false, false, true,
-              true,  false, false, true,  true,  false, false, false, true,  true  },
+            { true,  false,  false, false, false, false,  false,  false, false, false,
+              false,  false, false, false,  false,  false, false, false, false,  true  },
 
             /* row 7 */
             { true,  false, false, false, true,  true,  true,  true,  true,  false,
-              false, true,  true,  true,  true,  true,  true,  true,  true,  true  },
+              false, false,  true,  true,  true,  true,  true,  true,  false,  true  },
 
             /* row 8 */
-            { true,  false, false, false, true,  true,  true,  true,  true,  false,
-              false, true,  true,  true,  true,  true,  true,  true,  true,  true  },
+            { true,  false,  false, false, false, false,  false,  false, false, false,
+                false,  false, true, false,  false,  false, false, false, false,  true  },
 
             /* row 9 (bottom border) */
             { true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
@@ -245,6 +245,5 @@ namespace dave_game {
 
         void run();
         bool valid() const { return win != nullptr && ren != nullptr && tex != nullptr; }
-
     };
 }

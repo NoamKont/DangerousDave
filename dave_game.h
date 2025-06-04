@@ -127,11 +127,13 @@ namespace dave_game {
 
 /// @brief Marks the entity as dead (for cleanup or state transition).
     struct Dead {};
-
 /// @brief Marks whether Dave is on the ground
 
     struct GroundStatus {
         bool onGround = false;
+    }
+    using Grid = struct {
+        bool grid[10][20];
     };
 
 
@@ -154,25 +156,18 @@ namespace dave_game {
 
         void prepareWalls() const;
         void createWall(SDL_FPoint p, float w, float h) const;
+        void createMap();
 
         void createDave();
-        // Entity createMonster(Position pos, Image img);
-        // Entity createBlock(Position pos, Image img);
-        // Entity createPrize(Position pos, Image img, int scoreValue);
-        // Entity createBackground(Position pos, Image img);
-        // Entity createInfo(Position pos, Image img);
-        // Entity createTree(Position pos, Image img);
-        // Entity createGun(Position pos, Image img);
-        // Entity createJetpack(Position pos, Image img);
-        // Entity createObstacle(Position pos, Image img);
-        // Entity createDoor(Position pos, Image img, int scoreToAdd);
-        // Entity createTrophy(Position pos, Image img);
 
         static constexpr float	BOX_SCALE = 10;
         static constexpr float	CHARACTER_TEX_SCALE = 6.f;
 
-        static constexpr int WIN_WIDTH = 800;
-        static constexpr int WIN_HEIGHT = 800;
+        static constexpr SDL_FRect RED_BLOCK {86,380,11,11};
+
+        static constexpr int MAP_WIDTH = 20;
+        static constexpr int MAP_HEIGHT = 10;
+
         static constexpr int FPS = 60;
         static constexpr float ANIMATION_INTERVAL = 10;
 
@@ -185,13 +180,66 @@ namespace dave_game {
         static inline  Drawable** DAVE_ANIMATION = nullptr;
 
 
-        static constexpr SDL_FRect Dave_IDLE{ 5, 12, 8, 16 };
+        static constexpr SDL_FRect DAVE_STANDING{ 5, 13, 8, 16 };
+        static constexpr SDL_FRect DAVE_WALKING_1{27,13,12,16};
+        static constexpr SDL_FRect DAVE_WALKING_2{78,13,12,16};
+
+
+        static constexpr SDL_FRect DAVE_IDLE{ 155, 13, 7, 16 };
+        static constexpr SDL_FRect DAVE_JUMPING{127,13,13,14};
+
+        static constexpr int WIN_WIDTH = MAP_WIDTH * RED_BLOCK.w * CHARACTER_TEX_SCALE;
+        static constexpr int WIN_HEIGHT = MAP_HEIGHT * RED_BLOCK.h * CHARACTER_TEX_SCALE;
 
         SDL_Texture* tex;
         SDL_Renderer* ren;
         SDL_Window* win;
 
         b2WorldId boxWorld = b2_nullWorldId;
+
+        static inline bool map[10][20] =
+            {
+            /* row 0 (top border) */
+            { true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
+              true,  true,  true,  true,  true,  true,  true,  true,  true,  true  },
+
+            /* row 1 */
+            { true,  false,  false, false, false, false, false, false, false, false,
+              false, false, false, false, false, false, false, false, false,  true  },
+
+            /* row 2 */
+            { true,  false, false, false, false, false, false, false, false, false,
+              false, false, false, false, false, false, false, false, false, true  },
+
+            /* row 3 */
+            { true,  false, false, true,  false,  false, false, true,  false,  false,
+              false, true,  false,  false, false, true,  false,  false, false,  true  },
+
+            /* row 4 */
+            { true,  false, false, false,  false, false, false, false,  false,  false,
+              false, false,  false,  false, false, false, false,  false, false,  true  },
+
+            /* row 5 */
+            { true,  true,  false, false, false, true,  false,  false, false, true,
+              false,  false, false, false,  true,  false, false, false, true,  true  },
+
+            /* row 6 */
+            { true,  false,  false, false, false, false,  false,  false, false, false,
+              false,  false, false, false,  false,  false, false, false, false,  true  },
+
+            /* row 7 */
+            { true,  false, false, false, true,  true,  true,  true,  true,  false,
+              false, false,  true,  true,  true,  true,  true,  true,  false,  true  },
+
+            /* row 8 */
+            { true,  false,  false, false, false, false,  false,  false, false, false,
+                false,  false, true, false,  false,  false, false, false, false,  true  },
+
+            /* row 9 (bottom border) */
+            { true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
+              true,  true,  true,  true,  true,  true,  true,  true,  true,  true  }
+        };
+
 
     public:
         DaveGame();
@@ -201,6 +249,5 @@ namespace dave_game {
 
         void run();
         bool valid() const { return win != nullptr && ren != nullptr && tex != nullptr; }
-
     };
 }

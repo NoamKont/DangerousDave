@@ -131,7 +131,7 @@ namespace dave_game {
 
     struct GroundStatus {
         bool onGround = false;
-    }
+    };
     using Grid = struct {
         bool grid[10][20];
     };

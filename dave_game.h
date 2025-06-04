@@ -33,12 +33,18 @@ namespace dave_game {
     };
 
     using Animation = struct {
+
+        enum class Type {
+            DAVE
+        };
+
         Drawable** states_frames;
         int statesCount;
         int framesCount;
 
         int currentState = 0;
         int currentFrame = 0;
+        Type type;
     };
 
 
@@ -162,11 +168,13 @@ namespace dave_game {
         static constexpr int WIN_WIDTH = 800;
         static constexpr int WIN_HEIGHT = 800;
         static constexpr int FPS = 60;
-        static constexpr float ANIMATION_INTERVAL = 20;
+        static constexpr float ANIMATION_INTERVAL = 10;
 
         static constexpr float GAME_FRAME = 1000.f/FPS;
         static constexpr float PHYSICS_TIME_STEP = 1.0f / FPS;
         static constexpr float	RAD_TO_DEG = 57.2958f;
+
+        static constexpr float	ANIMATION_VELOCITY_THRESHOLD = 0.5f; // Velocity threshold to switch between animation states
 
         static inline  Drawable** DAVE_ANIMATION = nullptr;
 

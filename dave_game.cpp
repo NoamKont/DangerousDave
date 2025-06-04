@@ -129,6 +129,11 @@ namespace dave_game
                 in.down = keys[k.down];
                 in.left = keys[k.left];
                 in.right = keys[k.right];
+
+                Drawable& d = World::getComponent<Drawable>(e);
+                if (in.left || in.right) {
+                    d.flip = in.left; // Flip sprite if moving left
+                }
             }
         }
     }
@@ -147,6 +152,8 @@ namespace dave_game
                 auto& i = World::getComponent<Intent>(e);
                 const auto& c = World::getComponent<Collider>(e);
 
+                bool isDave = World::mask(e).test(Component<Dave>::Bit);
+
                 float JUMP_IMPULSE = 230.5f;
 
                 if (i.up) {
@@ -163,6 +170,34 @@ namespace dave_game
                 b2Body_SetLinearVelocity(c.b, {x,vel.y});
 
 
+
+                if (isDave) {
+                    
+                    auto& anim = World::getComponent<Animation>(e);
+
+                    if (vel.x >= -ANIMATION_VELOCITY_THRESHOLD && vel.x <= ANIMATION_VELOCITY_THRESHOLD && vel.y >= -ANIMATION_VELOCITY_THRESHOLD && vel.y <= ANIMATION_VELOCITY_THRESHOLD) {
+                        // If not moving, set to idle state
+                        if (anim.currentState != 0) {
+                            anim.currentState = 0; // IDLE
+                            anim.currentFrame = 0;
+                        }
+                    } else if (vel.y >= -ANIMATION_VELOCITY_THRESHOLD && vel.y <= ANIMATION_VELOCITY_THRESHOLD) {
+                        // If moving, set to walk state
+                        if (anim.currentState != 1) {
+                            anim.currentState = 1; // WALK
+                            anim.currentFrame = 0;
+                        }
+                    }
+                    else {
+                        // If jumping or falling, set to jump state
+                        if (anim.currentState != 2) {
+                            anim.currentState = 2; // JUMP
+                            anim.currentFrame = 0;
+                        }
+                    }
+
+
+                }
             }
         }
     }
@@ -257,7 +292,7 @@ namespace dave_game
 
         SDL_RenderClear(ren);
 
-        SDL_SetRenderDrawColor(ren,0,255,0,0);
+        //SDL_SetRenderDrawColor(ren,0,255,0,0);
 
         for (int i = 0; i <= World::maxId().id; ++i)
         {
@@ -376,7 +411,6 @@ namespace dave_game
                 continue;
             }
 
-            std::cout << "anim called" << endl;
 
             auto& anim = World::getComponent<Animation>(e);
             auto& sprite = World::getComponent<Drawable>(e);
@@ -411,12 +445,24 @@ namespace dave_game
         b2Polygon daveBox = b2MakeBox((Dave_IDLE.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2, (Dave_IDLE.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
         b2CreatePolygonShape(daveBody, &daveShapeDef, &daveBox);
 
-        DAVE_ANIMATION = new Drawable*[1] {
+        DAVE_ANIMATION = new Drawable*[3] {
+            new Drawable[4] { //IDLE
+                {Dave_IDLE, CHARACTER_TEX_SCALE, true, false},
+                {Dave_IDLE, CHARACTER_TEX_SCALE, true, false},
+                    {Dave_IDLE, CHARACTER_TEX_SCALE, true, false},
+                {Dave_IDLE, CHARACTER_TEX_SCALE, true, false}
+            },
             new Drawable[4] { //Walking
                 {Dave_IDLE, CHARACTER_TEX_SCALE, true, false},
                 {{27,13,12,15}, CHARACTER_TEX_SCALE, true, false},
                     {Dave_IDLE, CHARACTER_TEX_SCALE, true, false},
                 {{78,13,12,15}, CHARACTER_TEX_SCALE, true, false}
+            },
+            new Drawable[4] { //JUMP
+                {{127,12,13,14}, CHARACTER_TEX_SCALE, true, false},
+                {{127,12,13,14}, CHARACTER_TEX_SCALE, true, false},
+                    {{127,12,13,14}, CHARACTER_TEX_SCALE, true, false},
+                {{127,12,13,14}, CHARACTER_TEX_SCALE, true, false}
             }
         };
 
@@ -428,7 +474,7 @@ namespace dave_game
          Drawable{Dave_IDLE, CHARACTER_TEX_SCALE, true, false},
          Collider{daveBody},
          Intent{},
-         Animation{DAVE_ANIMATION, 1, 4, 0, 0}, // 1 state, 4 frames, current state 0, current frame 0
+         Animation{DAVE_ANIMATION, 1, 4, 0, 0, Animation::Type::DAVE}, // 1 state, 4 frames, current state 0, current frame 0
          Input{SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_RIGHT, SDL_SCANCODE_LEFT},
          Dave{}
          );

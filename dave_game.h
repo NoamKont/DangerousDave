@@ -140,6 +140,8 @@ namespace dave_game {
         void AnimationSystem();
         void box_system();
 
+        void prepareWalls() const;
+        void createWall(SDL_FPoint p, float w, float h) const;
 
         void createDave();
         // Entity createMonster(Position pos, Image img);

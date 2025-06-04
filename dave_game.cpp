@@ -18,6 +18,7 @@ namespace dave_game
         SDL_srand(time(nullptr));
 
         prepareBoxWorld();
+        prepareWalls();
 
 
         createDave();
@@ -98,13 +99,12 @@ namespace dave_game
                     quit = true;
             }
         }
-
     }
 
     void DaveGame::prepareBoxWorld()
     {
         b2WorldDef worldDef = b2DefaultWorldDef();
-        worldDef.gravity = {0,0};
+        worldDef.gravity = {0,9.8f};
         boxWorld = b2CreateWorld(&worldDef);
     }
 
@@ -147,10 +147,22 @@ namespace dave_game
                 auto& i = World::getComponent<Intent>(e);
                 const auto& c = World::getComponent<Collider>(e);
 
-                const float y = i.up ? -20 : i.down ? 20 : 0;
-                const float x = i.left ? -20 : i.right ? 20 : 0;
+                float JUMP_IMPULSE = 230.5f;
 
-                b2Body_SetLinearVelocity(c.b, {x,y});
+                if (i.up) {
+                    // b2Vec2 impulse = {0, -JUMP_IMPULSE}; // negative Y is up in Box2D
+                    // b2Body_ApplyLinearImpulse(c.b, impulse, b2Body_GetPosition(c.b), true);
+
+                    b2Body_SetLinearVelocity(c.b,{0, -15});
+
+                }
+
+                const auto& vel = b2Body_GetLinearVelocity(c.b);
+
+                const float x = i.left ? -20 : i.right ? 20 : 0;
+                b2Body_SetLinearVelocity(c.b, {x,vel.y});
+
+
             }
         }
     }
@@ -178,6 +190,42 @@ namespace dave_game
         }
     }
 
+    void DaveGame::prepareWalls() const {
+            //upper and lower borders
+            createWall({WIN_WIDTH  / 2.0f, 0.0f},WIN_WIDTH,5.f);
+            createWall({WIN_WIDTH  / 2.0f, WIN_HEIGHT},WIN_WIDTH ,60.f);
+            //side borders
+            createWall({0.0f, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
+            createWall({WIN_WIDTH, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
+
+    }
+    void DaveGame::createWall(SDL_FPoint p, float w, float h) const {
+        const float width = w;
+        const float height = h;
+
+
+        b2BodyDef wallBodyDef = b2DefaultBodyDef();
+        wallBodyDef.type = b2_staticBody;
+        wallBodyDef.position = {p.x / BOX_SCALE, p.y / BOX_SCALE};
+
+        b2BodyId wallBody = b2CreateBody(boxWorld, &wallBodyDef);
+
+        b2ShapeDef shapeDef = b2DefaultShapeDef();
+        //shapeDef.enableSensorEvents = true;
+        //shapeDef.isSensor = true;
+        shapeDef.density = 1; // Not needed for static, but harmless
+
+        b2Polygon box = b2MakeBox(width / 2.0f / BOX_SCALE, height / 2.0f / BOX_SCALE);
+        b2ShapeId shape = b2CreatePolygonShape(wallBody, &shapeDef, &box);
+
+        Entity e = Entity::create();
+        e.addAll(
+                Position{p, 0},
+                Collider{wallBody},
+                Wall{shape, {width, height}}
+        );
+        b2Body_SetUserData(wallBody, new ent_type{e.entity()});
+    }
     // /// @brief Handles collisions between entities with Position and Collision.
     // /// Optionally reacts to Collectible or Hazard components.
     // void CollisionSystem()
@@ -350,14 +398,14 @@ namespace dave_game
         SDL_FPoint p = {13.f, 240.f};//TODO start position
 
         b2BodyDef daveBodyDef = b2DefaultBodyDef();
-        daveBodyDef.type = b2_kinematicBody;
+        daveBodyDef.type = b2_dynamicBody;
         daveBodyDef.position = {p.x / BOX_SCALE, p.y / BOX_SCALE};
         b2BodyId daveBody = b2CreateBody(boxWorld, &daveBodyDef);
 
         //Define shape
         b2ShapeDef daveShapeDef = b2DefaultShapeDef();
-        daveShapeDef.enableSensorEvents = true;
-        daveShapeDef.isSensor = true;
+        //daveShapeDef.enableSensorEvents = true;
+        //daveShapeDef.isSensor = false;
         daveShapeDef.density = 1; // Not needed for static, but harmless
 
         b2Polygon daveBox = b2MakeBox((Dave_IDLE.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2, (Dave_IDLE.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);

@@ -5,12 +5,43 @@
 #include <SDL3_image/SDL_image.h>
 #include <box2d/box2d.h>
 
-#include "Pacman.h"
+
 
 using namespace bagel;
 using namespace std;
 namespace dave_game
 {
+    void DaveGame::run()
+    {
+        SDL_SetRenderDrawColor(ren, 0,0,0,255);
+        auto start = SDL_GetTicks();
+        bool quit = false;
+
+        while (!quit) {
+
+            InputSystem();
+            //AISystem();
+            MovementSystem();
+            box_system();
+            //CollisionSystem();
+            AnimationSystem();
+            RenderSystem();
+
+            auto end = SDL_GetTicks();
+            if (end-start < GAME_FRAME) {
+                SDL_Delay(GAME_FRAME - (end-start));
+            }
+            start += GAME_FRAME;
+
+            SDL_Event e;
+            while (SDL_PollEvent(&e)) {
+                if (e.type == SDL_EVENT_QUIT)
+                    quit = true;
+                else if ((e.type == SDL_EVENT_KEY_DOWN) && (e.key.scancode == SDL_SCANCODE_ESCAPE))
+                    quit = true;
+            }
+        }
+    }
 
     DaveGame::DaveGame() {
         if (!prepareWindowAndTexture())
@@ -18,7 +49,7 @@ namespace dave_game
         SDL_srand(time(nullptr));
 
         prepareBoxWorld();
-        prepareWalls();
+        createMap();
 
 
         createDave();
@@ -53,7 +84,7 @@ namespace dave_game
             cout << SDL_GetError() << endl;
             return false;
             }
-        SDL_Surface *surf = IMG_Load("res/dave.png");
+        SDL_Surface *surf = IMG_Load("res/Dave1.png");
         if (surf == nullptr) {
             cout << SDL_GetError() << endl;
             return false;
@@ -67,38 +98,6 @@ namespace dave_game
 
         SDL_DestroySurface(surf);
         return true;
-    }
-
-    void DaveGame::run()
-    {
-        SDL_SetRenderDrawColor(ren, 0,0,0,255);
-        auto start = SDL_GetTicks();
-        bool quit = false;
-
-        while (!quit) {
-
-            InputSystem();
-            //AISystem();
-            MovementSystem();
-            box_system();
-            //CollisionSystem();
-            AnimationSystem();
-            RenderSystem();
-
-            auto end = SDL_GetTicks();
-            if (end-start < GAME_FRAME) {
-                SDL_Delay(GAME_FRAME - (end-start));
-            }
-            start += GAME_FRAME;
-
-            SDL_Event e;
-            while (SDL_PollEvent(&e)) {
-                if (e.type == SDL_EVENT_QUIT)
-                    quit = true;
-                else if ((e.type == SDL_EVENT_KEY_DOWN) && (e.key.scancode == SDL_SCANCODE_ESCAPE))
-                    quit = true;
-            }
-        }
     }
 
     void DaveGame::prepareBoxWorld()
@@ -154,12 +153,7 @@ namespace dave_game
 
                 bool isDave = World::mask(e).test(Component<Dave>::Bit);
 
-                float JUMP_IMPULSE = 230.5f;
-
                 if (i.up) {
-                    // b2Vec2 impulse = {0, -JUMP_IMPULSE}; // negative Y is up in Box2D
-                    // b2Body_ApplyLinearImpulse(c.b, impulse, b2Body_GetPosition(c.b), true);
-
                     b2Body_SetLinearVelocity(c.b,{0, -15});
 
                 }
@@ -225,63 +219,6 @@ namespace dave_game
         }
     }
 
-    void DaveGame::prepareWalls() const {
-            //upper and lower borders
-            createWall({WIN_WIDTH  / 2.0f, 0.0f},WIN_WIDTH,5.f);
-            createWall({WIN_WIDTH  / 2.0f, WIN_HEIGHT},WIN_WIDTH ,60.f);
-            //side borders
-            createWall({0.0f, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
-            createWall({WIN_WIDTH, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
-
-    }
-    void DaveGame::createWall(SDL_FPoint p, float w, float h) const {
-        const float width = w;
-        const float height = h;
-
-
-        b2BodyDef wallBodyDef = b2DefaultBodyDef();
-        wallBodyDef.type = b2_staticBody;
-        wallBodyDef.position = {p.x / BOX_SCALE, p.y / BOX_SCALE};
-
-        b2BodyId wallBody = b2CreateBody(boxWorld, &wallBodyDef);
-
-        b2ShapeDef shapeDef = b2DefaultShapeDef();
-        //shapeDef.enableSensorEvents = true;
-        //shapeDef.isSensor = true;
-        shapeDef.density = 1; // Not needed for static, but harmless
-
-        b2Polygon box = b2MakeBox(width / 2.0f / BOX_SCALE, height / 2.0f / BOX_SCALE);
-        b2ShapeId shape = b2CreatePolygonShape(wallBody, &shapeDef, &box);
-
-        Entity e = Entity::create();
-        e.addAll(
-                Position{p, 0},
-                Collider{wallBody},
-                Wall{shape, {width, height}}
-        );
-        b2Body_SetUserData(wallBody, new ent_type{e.entity()});
-    }
-    // /// @brief Handles collisions between entities with Position and Collision.
-    // /// Optionally reacts to Collectible or Hazard components.
-    // void CollisionSystem()
-    // {
-    //     MaskBuilder builder;
-    //     builder.set<Position>().set<Collision>();
-    //     Mask required = builder.build();
-    //
-    //     for (int i = 0; i < World::maxId().id; ++i)
-    //     {
-    //         ent_type e{i};
-    //         if (!World::mask(e).test(required))
-    //         {
-    //             continue;
-    //         }
-    //
-    //         bool hasCollectible = World::mask(e).test(Component<Collectible>::Bit);
-    //         bool hasHazard = World::mask(e).test(Component<Hazard>::Bit);
-    //     }
-    // }
-
     /// @brief Renders entities with Image, Position, and GameInfo components.
     /// Also checks optional components like Course, Collision, Gun, and Jetpack.
     void DaveGame::RenderSystem()
@@ -292,7 +229,7 @@ namespace dave_game
 
         SDL_RenderClear(ren);
 
-        //SDL_SetRenderDrawColor(ren,0,255,0,0);
+        SDL_SetRenderDrawColor(ren,0,255,0,0);
 
         for (int i = 0; i <= World::maxId().id; ++i)
         {
@@ -322,72 +259,7 @@ namespace dave_game
         SDL_RenderPresent(ren);
     }
 
-    //
-    //
-    // /// @brief Manages score, level, and lives using the GameInfo component.
-    // /// Checks optional Health, Door, and PrizeValue components.
-    // void ScoreSystem()
-    // {
-    //     MaskBuilder builder;
-    //     builder.set<GameInfo>();
-    //     Mask required = builder.build();
-    //
-    //     for (int i = 0; i < World::maxId().id; ++i)
-    //     {
-    //         ent_type e{i};
-    //         if (!World::mask(e).test(required))
-    //         {
-    //             continue;
-    //         }
-    //
-    //         bool hasHealth = World::mask(e).test(Component<Health>::Bit);
-    //         bool hasDoor = World::mask(e).test(Component<Door>::Bit);
-    //         bool hasPrizeValue = World::mask(e).test(Component<PrizeValue>::Bit);
-    //     }
-    // }
-    //
-    // /// @brief Handles item collection (prizes, weapons, trophies) and level progression.
-    // /// Requires Collision, Position, and Collectible. Checks optional Gun, Jetpack, Door, and Unlocks.
-    // void CollectSystem()
-    // {
-    //     MaskBuilder builder;
-    //     builder.set<Collision>().set<Position>().set<Collectible>();
-    //     Mask required = builder.build();
-    //
-    //     for (int i = 0; i < World::maxId().id; ++i)
-    //     {
-    //         ent_type e{i};
-    //         if (!World::mask(e).test(required))
-    //         {
-    //             continue;
-    //         }
-    //
-    //         bool hasGun = World::mask(e).test(Component<Gun>::Bit);
-    //         bool hasJetpack = World::mask(e).test(Component<Jetpack>::Bit);
-    //         bool hasDoor = World::mask(e).test(Component<Door>::Bit);
-    //         bool hasUnlocks = World::mask(e).test(Component<Unlocks>::Bit);
-    //     }
-    // }
-    //
-    // /// @brief Handles entity death caused by hazards or depleted health.
-    // /// Requires Health and Dead components.
-    // void DeathSystem()
-    // {
-    //     MaskBuilder builder;
-    //     builder.set<Health>().set<Dead>();
-    //     Mask required = builder.build();
-    //
-    //     for (int i = 0; i < World::maxId().id; ++i)
-    //     {
-    //         ent_type e{i};
-    //         if (!World::mask(e).test(required))
-    //         {
-    //             continue;
-    //         }
-    //
-    //     }
-    // }
-    //
+
     /// @brief Updates animation state for entities with visual animations.
     /// Requires Animation and Image components.
     void DaveGame::AnimationSystem()
@@ -429,7 +301,7 @@ namespace dave_game
     /// @brief Creates the player entity (Dave) with default attributes.
     void DaveGame::createDave()
     {
-        SDL_FPoint p = {13.f, 240.f};//TODO start position
+        SDL_FPoint p = {WIN_WIDTH/2, WIN_HEIGHT/2};//TODO start position
 
         b2BodyDef daveBodyDef = b2DefaultBodyDef();
         daveBodyDef.type = b2_dynamicBody;
@@ -442,27 +314,27 @@ namespace dave_game
         //daveShapeDef.isSensor = false;
         daveShapeDef.density = 1; // Not needed for static, but harmless
 
-        b2Polygon daveBox = b2MakeBox((Dave_IDLE.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2, (Dave_IDLE.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
+        b2Polygon daveBox = b2MakeBox((DAVE_STANDING.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2, (DAVE_STANDING.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
         b2CreatePolygonShape(daveBody, &daveShapeDef, &daveBox);
 
         DAVE_ANIMATION = new Drawable*[3] {
             new Drawable[4] { //IDLE
-                {Dave_IDLE, CHARACTER_TEX_SCALE, true, false},
-                {Dave_IDLE, CHARACTER_TEX_SCALE, true, false},
-                    {Dave_IDLE, CHARACTER_TEX_SCALE, true, false},
-                {Dave_IDLE, CHARACTER_TEX_SCALE, true, false}
+                {DAVE_IDLE, CHARACTER_TEX_SCALE, true, false},
+                {DAVE_IDLE, CHARACTER_TEX_SCALE, true, false},
+                    {DAVE_IDLE, CHARACTER_TEX_SCALE, true, false},
+                {DAVE_IDLE, CHARACTER_TEX_SCALE, true, false}
             },
             new Drawable[4] { //Walking
-                {Dave_IDLE, CHARACTER_TEX_SCALE, true, false},
-                {{27,13,12,15}, CHARACTER_TEX_SCALE, true, false},
-                    {Dave_IDLE, CHARACTER_TEX_SCALE, true, false},
-                {{78,13,12,15}, CHARACTER_TEX_SCALE, true, false}
+                {DAVE_STANDING, CHARACTER_TEX_SCALE, true, false},
+                {DAVE_WALKING_1, CHARACTER_TEX_SCALE, true, false},
+                    {DAVE_STANDING, CHARACTER_TEX_SCALE, true, false},
+                {DAVE_WALKING_2, CHARACTER_TEX_SCALE, true, false}
             },
             new Drawable[4] { //JUMP
-                {{127,12,13,14}, CHARACTER_TEX_SCALE, true, false},
-                {{127,12,13,14}, CHARACTER_TEX_SCALE, true, false},
-                    {{127,12,13,14}, CHARACTER_TEX_SCALE, true, false},
-                {{127,12,13,14}, CHARACTER_TEX_SCALE, true, false}
+                {DAVE_JUMPING, CHARACTER_TEX_SCALE, true, false},
+                {DAVE_JUMPING, CHARACTER_TEX_SCALE, true, false},
+                    {DAVE_JUMPING, CHARACTER_TEX_SCALE, true, false},
+                {DAVE_JUMPING, CHARACTER_TEX_SCALE, true, false}
             }
         };
 
@@ -471,7 +343,7 @@ namespace dave_game
         Entity e = Entity::create();
         e.addAll(
          Position{{},0},
-         Drawable{Dave_IDLE, CHARACTER_TEX_SCALE, true, false},
+         Drawable{DAVE_STANDING, CHARACTER_TEX_SCALE, true, false},
          Collider{daveBody},
          Intent{},
          Animation{DAVE_ANIMATION, 1, 4, 0, 0, Animation::Type::DAVE}, // 1 state, 4 frames, current state 0, current frame 0
@@ -484,153 +356,54 @@ namespace dave_game
     }
 
     /// @brief Creates a monster entity.
-    // Entity createMonster(Position pos, Image img)
-    // {
-    //     Entity e = Entity::create();
-    //
-    //     e.add(pos);
-    //     //e.add(Course{});
-    //     e.add(img);
-    //     //e.add(Collision{});
-    //     e.add(Health{1});
-    //     e.add(Hazard{});
-    //     e.add(Gun{});
-    //     //e.add(Animation{});
-    //
-    //     return e;
-    // }
+    void DaveGame::prepareWalls() const {
+        //upper and lower borders
+        createWall({WIN_WIDTH  / 2.0f, 0.0f},WIN_WIDTH,5.f);
+        createWall({WIN_WIDTH  / 2.0f, WIN_HEIGHT},WIN_WIDTH ,125.f);
+        //side borders
+        createWall({0.0f, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
+        createWall({WIN_WIDTH, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
 
-// /// @brief Creates a static block (e.g. ground or wall).
-//     Entity createBlock(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates a collectible prize with a score value.
-//     Entity createPrize(Position pos, Image img, int scoreValue)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Collectible{});
-//         e.add(PrizeValue{scoreValue});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates the game background.
-//     Entity createBackground(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//
-//         return e;
-//     }
-//
-// /// @brief Creates the info UI entity (e.g. score, level).
-//     Entity createInfo(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(GameInfo{});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates a climbable tree.
-//     Entity createTree(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Climbable{});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates a gun pickup.
-//     Entity createGun(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Collectible{});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates a jetpack pickup.
-//     Entity createJetpack(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Collectible{});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates a deadly obstacle.
-//     Entity createObstacle(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Hazard{});
-//         e.add(Animation{});
-//         return e;
-//     }
-//
-// /// @brief Creates a door entity.
-//     Entity createDoor(Position pos, Image img, int scoreToAdd)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Door{});
-//         e.add(PrizeValue{scoreToAdd});
-//
-//         return e;
-//     }
-//
-// /// @brief Creates a trophy entity that unlocks a door.
-//     Entity createTrophy(Position pos, Image img)
-//     {
-//         Entity e = Entity::create();
-//
-//         e.add(pos);
-//         e.add(img);
-//         e.add(Collision{});
-//         e.add(Collectible{});
-//         e.add(PrizeValue{100});
-//         e.add(Animation{});
-//         e.add(Unlocks{});
-//
-//         return e;
-//     }
+    }
+
+    void DaveGame::createWall(SDL_FPoint p, float w, float h) const {
+        const float width = w;
+        const float height = h;
 
 
+        b2BodyDef wallBodyDef = b2DefaultBodyDef();
+        wallBodyDef.type = b2_staticBody;
+        wallBodyDef.position = {p.x / BOX_SCALE, p.y / BOX_SCALE};
 
+        b2BodyId wallBody = b2CreateBody(boxWorld, &wallBodyDef);
 
+        b2ShapeDef shapeDef = b2DefaultShapeDef();
+        //shapeDef.enableSensorEvents = true;
+        //shapeDef.isSensor = true;
+
+        b2Polygon box = b2MakeBox(width / 2.0f / BOX_SCALE, height / 2.0f / BOX_SCALE);
+        b2ShapeId shape = b2CreatePolygonShape(wallBody, &shapeDef, &box);
+
+        Entity e = Entity::create();
+        e.addAll(
+            Position{p, 0},
+            Collider{wallBody},
+            Wall{shape, {width, height}},
+            Drawable{{86,380,11,11},CHARACTER_TEX_SCALE,true,false}
+        );
+        b2Body_SetUserData(wallBody, new ent_type{e.entity()});
+    }
+
+    void DaveGame::createMap() {
+
+        for (int row = 0; row < DaveGame::MAP_HEIGHT; ++row) {
+            for (int col = 0; col < DaveGame::MAP_WIDTH; ++col) {
+                if (DaveGame::map[row][col]) {
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::CHARACTER_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::CHARACTER_TEX_SCALE};
+                    createWall(p, DaveGame::RED_BLOCK.w * DaveGame::CHARACTER_TEX_SCALE, DaveGame::RED_BLOCK.h * DaveGame::CHARACTER_TEX_SCALE);
+                }
+            }
+        }
+
+    }
 }

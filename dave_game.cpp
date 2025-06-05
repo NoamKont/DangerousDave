@@ -23,7 +23,7 @@ namespace dave_game
             //AISystem();
             MovementSystem();
             box_system();
-            //CollisionSystem();
+            CollisionSystem();
             AnimationSystem();
             RenderSystem();
 
@@ -178,7 +178,6 @@ namespace dave_game
                         if (anim.currentState != 0) {
                             anim.currentState = 0; // IDLE
                             anim.currentFrame = 0;
-                            groundStatus.onGround = true;
                         }
 
                     } else if (vel.y >= -ANIMATION_VELOCITY_THRESHOLD && vel.y <= ANIMATION_VELOCITY_THRESHOLD) {
@@ -186,7 +185,6 @@ namespace dave_game
                         if (anim.currentState != 1) {
                             anim.currentState = 1; // WALK
                             anim.currentFrame = 0;
-                            groundStatus.onGround = true;
                         }
                     }
                     else {
@@ -194,12 +192,37 @@ namespace dave_game
                         if (anim.currentState != 2) {
                             anim.currentState = 2; // JUMP
                             anim.currentFrame = 0;
-                            groundStatus.onGround = false;
                         }
                     }
 
 
                 }
+            }
+        }
+    }
+
+    void DaveGame::CollisionSystem()
+    {
+        const auto sensorEvents = b2World_GetSensorEvents(boxWorld);
+
+        for(int i = 0 ; i < sensorEvents.beginCount ; i++)
+        {
+            b2BodyId sensor = b2Shape_GetBody(sensorEvents.beginEvents[i].sensorShapeId);
+            b2BodyId visitor = b2Shape_GetBody(sensorEvents.beginEvents[i].visitorShapeId);
+            auto *visitorEntity = static_cast<ent_type*>(b2Body_GetUserData(visitor));
+            auto *sensorEntity = static_cast<ent_type*>(b2Body_GetUserData(sensor));
+
+            bool sensorIsDave = World::mask(*sensorEntity).test(Component<Dave>::Bit);
+
+            bool visitorIsWall = World::mask(*visitorEntity).test(Component<Wall>::Bit);
+            bool visitorIsPrize = World::mask(*visitorEntity).test(Component<PrizeValue>::Bit);
+            bool visitorIsMonster = World::mask(*visitorEntity).test(Component<Monster>::Bit);
+            bool visitorIsTrophy = World::mask(*visitorEntity).test(Component<Trophy>::Bit);
+
+            if(sensorIsDave && visitorIsWall)
+            {
+                auto& groundStatus = World::getComponent<GroundStatus>(*sensorEntity);
+                groundStatus.onGround = true;
             }
         }
     }
@@ -318,8 +341,8 @@ namespace dave_game
 
         //Define shape
         b2ShapeDef daveShapeDef = b2DefaultShapeDef();
-        //daveShapeDef.enableSensorEvents = true;
-        //daveShapeDef.isSensor = false;
+        daveShapeDef.enableSensorEvents = true;
+        daveShapeDef.isSensor = true;
         daveShapeDef.density = 1; // Not needed for static, but harmless
 
         b2Polygon daveBox = b2MakeBox((DAVE_STANDING.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2, (DAVE_STANDING.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
@@ -359,7 +382,7 @@ namespace dave_game
          Dave{},
          GroundStatus{true}
          );
-        //b2Body_SetUserData(pacmanBody, new ent_type{e.entity()});
+        b2Body_SetUserData(daveBody, new ent_type{e.entity()});
 
         std::cout << "Dave entity created with ID: " << e.entity().id << std::endl;
     }
@@ -387,8 +410,7 @@ namespace dave_game
         b2BodyId wallBody = b2CreateBody(boxWorld, &wallBodyDef);
 
         b2ShapeDef shapeDef = b2DefaultShapeDef();
-        //shapeDef.enableSensorEvents = true;
-        //shapeDef.isSensor = true;
+        shapeDef.enableSensorEvents = true;
 
         b2Polygon box = b2MakeBox(width / 2.0f / BOX_SCALE, height / 2.0f / BOX_SCALE);
         b2ShapeId shape = b2CreatePolygonShape(wallBody, &shapeDef, &box);

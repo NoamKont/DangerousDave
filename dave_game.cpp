@@ -348,16 +348,17 @@ namespace dave_game
         //Define shape
         b2ShapeDef daveShapeDef = b2DefaultShapeDef();
         daveShapeDef.density = 28.9;
-        daveShapeDef.enableSensorEvents = true;
-        daveShapeDef.isSensor = true;
+        daveShapeDef.enableSensorEvents = false;
+        daveShapeDef.isSensor = false;
 
         b2Polygon daveBox = b2MakeBox((DAVE_STANDING.w*DAVE_TEX_SCALE/BOX_SCALE)/2, (DAVE_STANDING.h*DAVE_TEX_SCALE/BOX_SCALE)/2);
         b2CreatePolygonShape(daveBody, &daveShapeDef, &daveBox);
 
-        daveShapeDef.enableSensorEvents = false;
-        daveShapeDef.isSensor = false;
-        daveBox = b2MakeBox((DAVE_STANDING.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2, (DAVE_STANDING.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
-        b2CreatePolygonShape(daveBody, &daveShapeDef, &daveBox);
+        b2ShapeDef daveShapeDef2 = b2DefaultShapeDef();
+        daveShapeDef2.enableSensorEvents = true;
+        daveShapeDef2.isSensor = true;
+        b2Polygon daveBox2 = b2MakeBox((DAVE_STANDING.w*DAVE_TEX_SCALE/BOX_SCALE)/2, (DAVE_STANDING.h*DAVE_TEX_SCALE/BOX_SCALE)/2);
+        b2CreatePolygonShape(daveBody, &daveShapeDef2, &daveBox2);
 
 
         DAVE_ANIMATION = new Drawable*[3] {
@@ -442,22 +443,20 @@ namespace dave_game
         for (int row = 0; row < DaveGame::MAP_HEIGHT; ++row) {
             for (int col = 0; col < DaveGame::MAP_WIDTH; ++col) {
                 if (DaveGame::map[row][col] == DaveGame::GRID_RED_BLOCK) {
-                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::CHARACTER_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::CHARACTER_TEX_SCALE};
-                    createWall(p, DaveGame::RED_BLOCK.w * DaveGame::CHARACTER_TEX_SCALE, DaveGame::RED_BLOCK.h * DaveGame::CHARACTER_TEX_SCALE);
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
+                    createWall(p, DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE);
                 }
                 else if (DaveGame::map[row][col] == DaveGame::GRID_DIAMOND) {
-                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::CHARACTER_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::CHARACTER_TEX_SCALE};
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
                     createDiamond(p);
                 }
                 else if (DaveGame::map[row][col] == DaveGame::GRID_DOOR) {
-                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::CHARACTER_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::CHARACTER_TEX_SCALE};
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
                     createDoor(p);
                 }
             }
         }
-
-
-
+        
     }
 
     void DaveGame::createDiamond(SDL_FPoint p) {
@@ -471,14 +470,14 @@ namespace dave_game
 
         b2ShapeDef diamondShapeDef = b2DefaultShapeDef();
         diamondShapeDef.enableSensorEvents = true;
-        diamondShapeDef.isSensor = true;
+        //diamondShapeDef.isSensor = true;
 
-        b2Polygon diamondBox = b2MakeBox((DIAMOND.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2, (DIAMOND.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
+        b2Polygon diamondBox = b2MakeBox((DIAMOND.w*BLOCK_TEX_SCALE/BOX_SCALE)/2, (DIAMOND.h*BLOCK_TEX_SCALE/BOX_SCALE)/2);
         b2CreatePolygonShape(diamondBody, &diamondShapeDef, &diamondBox);
 
         diamond.addAll(
             Position{p, 0},
-            Drawable{DIAMOND, CHARACTER_TEX_SCALE, true, false}
+            Drawable{DIAMOND, BLOCK_TEX_SCALE, true, false}
             );
     }
 
@@ -493,14 +492,14 @@ namespace dave_game
 
         b2ShapeDef doorShapeDef = b2DefaultShapeDef();
         doorShapeDef.enableSensorEvents = true;
-        doorShapeDef.isSensor = true;
+        //doorShapeDef.isSensor = true;
 
-        b2Polygon diamondBox = b2MakeBox((DOOR.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2, (DOOR.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
+        b2Polygon diamondBox = b2MakeBox((DOOR.w*BLOCK_TEX_SCALE/BOX_SCALE)/2, (DOOR.h*BLOCK_TEX_SCALE/BOX_SCALE)/2);
         b2CreatePolygonShape(doorBody, &doorShapeDef, &diamondBox);
 
         door.addAll(
             Position{p, 0},
-            Drawable{DOOR, CHARACTER_TEX_SCALE, true, false}
+            Drawable{DOOR, BLOCK_TEX_SCALE, true, false}
             );
     }
 }

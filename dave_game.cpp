@@ -390,7 +390,7 @@ namespace dave_game
          Dave{},
          GroundStatus{true}
          );
-        //b2Body_SetUserData(pacmanBody, new ent_type{e.entity()});
+        b2Body_SetUserData(daveBody, new ent_type{e.entity()});
 
         std::cout << "Dave entity created with ID: " << e.entity().id << std::endl;
     }

@@ -156,7 +156,7 @@ namespace dave_game
 
                 const auto& vel = b2Body_GetLinearVelocity(c.b);
 
-                const float x = i.left ? -20 : i.right ? 20 : 0;
+                const float x = i.left ? -3 : i.right ? 3 : 0;
                 b2Body_SetLinearVelocity(c.b, {x,vel.y});
 
 
@@ -166,10 +166,13 @@ namespace dave_game
                     auto& groundStatus = World::getComponent<GroundStatus>(e);
 
                     if (i.up && groundStatus.onGround) {
-                        // b2Vec2 impulse = {0, -JUMP_IMPULSE}; // negative Y is up in Box2D
-                        // b2Body_ApplyLinearImpulse(c.b, impulse, b2Body_GetPosition(c.b), true);
 
-                        b2Body_SetLinearVelocity(c.b,{0, -15});
+                        float jumpVelocity = 5.4f;
+                        float mass = b2Body_GetMass(c.b);
+                        b2Vec2 impulse = {0.0f, -mass * jumpVelocity};
+                        b2Body_ApplyLinearImpulseToCenter(c.b, impulse, true);
+
+                        //b2Body_SetLinearVelocity(c.b,{0, -15});
                         groundStatus.onGround = false;
                     }
 
@@ -344,11 +347,11 @@ namespace dave_game
 
         //Define shape
         b2ShapeDef daveShapeDef = b2DefaultShapeDef();
+        daveShapeDef.density = 28.9;
         daveShapeDef.enableSensorEvents = true;
         daveShapeDef.isSensor = true;
-        daveShapeDef.density = 1; // Not needed for static, but harmless
 
-        b2Polygon daveBox = b2MakeBox((DAVE_STANDING.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2 + 4, (DAVE_STANDING.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
+        b2Polygon daveBox = b2MakeBox((DAVE_STANDING.w*DAVE_TEX_SCALE/BOX_SCALE)/2, (DAVE_STANDING.h*DAVE_TEX_SCALE/BOX_SCALE)/2);
         b2CreatePolygonShape(daveBody, &daveShapeDef, &daveBox);
 
         daveShapeDef.enableSensorEvents = false;
@@ -359,22 +362,22 @@ namespace dave_game
 
         DAVE_ANIMATION = new Drawable*[3] {
             new Drawable[4] { //IDLE
-                {DAVE_IDLE, CHARACTER_TEX_SCALE, true, false},
-                {DAVE_IDLE, CHARACTER_TEX_SCALE, true, false},
-                    {DAVE_IDLE, CHARACTER_TEX_SCALE, true, false},
-                {DAVE_IDLE, CHARACTER_TEX_SCALE, true, false}
+                {DAVE_IDLE, DAVE_TEX_SCALE, true, false},
+                {DAVE_IDLE, DAVE_TEX_SCALE, true, false},
+                    {DAVE_IDLE, DAVE_TEX_SCALE, true, false},
+                {DAVE_IDLE, DAVE_TEX_SCALE, true, false}
             },
             new Drawable[4] { //Walking
-                {DAVE_STANDING, CHARACTER_TEX_SCALE, true, false},
-                {DAVE_WALKING_1, CHARACTER_TEX_SCALE, true, false},
-                    {DAVE_STANDING, CHARACTER_TEX_SCALE, true, false},
-                {DAVE_WALKING_2, CHARACTER_TEX_SCALE, true, false}
+                {DAVE_STANDING, DAVE_TEX_SCALE, true, false},
+                {DAVE_WALKING_1, DAVE_TEX_SCALE, true, false},
+                    {DAVE_STANDING, DAVE_TEX_SCALE, true, false},
+                {DAVE_WALKING_2, DAVE_TEX_SCALE, true, false}
             },
             new Drawable[4] { //JUMP
-                {DAVE_JUMPING, CHARACTER_TEX_SCALE, true, false},
-                {DAVE_JUMPING, CHARACTER_TEX_SCALE, true, false},
-                    {DAVE_JUMPING, CHARACTER_TEX_SCALE, true, false},
-                {DAVE_JUMPING, CHARACTER_TEX_SCALE, true, false}
+                {DAVE_JUMPING, DAVE_TEX_SCALE, true, false},
+                {DAVE_JUMPING, DAVE_TEX_SCALE, true, false},
+                    {DAVE_JUMPING, DAVE_TEX_SCALE, true, false},
+                {DAVE_JUMPING, DAVE_TEX_SCALE, true, false}
             }
         };
 
@@ -383,7 +386,7 @@ namespace dave_game
         Entity e = Entity::create();
         e.addAll(
          Position{{},0},
-         Drawable{DAVE_STANDING, CHARACTER_TEX_SCALE, true, false},
+         Drawable{DAVE_STANDING, DAVE_TEX_SCALE, true, false},
          Collider{daveBody},
          Intent{},
          Animation{DAVE_ANIMATION, 1, 4, 0, 0, Animation::Type::DAVE}, // 1 state, 4 frames, current state 0, current frame 0
@@ -396,16 +399,16 @@ namespace dave_game
         std::cout << "Dave entity created with ID: " << e.entity().id << std::endl;
     }
 
-    /// @brief Creates a monster entity.
-    void DaveGame::prepareWalls() const {
-        //upper and lower borders
-        createWall({WIN_WIDTH  / 2.0f, 0.0f},WIN_WIDTH,5.f);
-        createWall({WIN_WIDTH  / 2.0f, WIN_HEIGHT},WIN_WIDTH ,125.f);
-        //side borders
-        createWall({0.0f, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
-        createWall({WIN_WIDTH, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
-
-    }
+    // /// @brief Creates a monster entity.
+    // void DaveGame::prepareWalls() const {
+    //     //upper and lower borders
+    //     createWall({WIN_WIDTH  / 2.0f, 0.0f},WIN_WIDTH,5.f);
+    //     createWall({WIN_WIDTH  / 2.0f, WIN_HEIGHT},WIN_WIDTH ,125.f);
+    //     //side borders
+    //     createWall({0.0f, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
+    //     createWall({WIN_WIDTH, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
+    //
+    // }
 
     void DaveGame::createWall(SDL_FPoint p, float w, float h) const {
         const float width = w;
@@ -421,7 +424,7 @@ namespace dave_game
         b2ShapeDef shapeDef = b2DefaultShapeDef();
         shapeDef.enableSensorEvents = true;
 
-        b2Polygon box = b2MakeBox(width / 2.0f / BOX_SCALE, height / 2.0f / BOX_SCALE);
+        b2Polygon box = b2MakeBox((width/ BOX_SCALE) / 2.f, (height /  BOX_SCALE) / 2.f);
         b2ShapeId shape = b2CreatePolygonShape(wallBody, &shapeDef, &box);
 
         Entity e = Entity::create();
@@ -429,7 +432,7 @@ namespace dave_game
             Position{p, 0},
             Collider{wallBody},
             Wall{shape, {width, height}},
-            Drawable{{86,380,11,11},CHARACTER_TEX_SCALE,true,false}
+            Drawable{{86,380,11,11},DAVE_TEX_SCALE,true,false}
         );
         b2Body_SetUserData(wallBody, new ent_type{e.entity()});
     }

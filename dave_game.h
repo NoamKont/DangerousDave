@@ -162,8 +162,9 @@ namespace dave_game {
 
         void createDave();
 
-        static constexpr float	BOX_SCALE = 10;
-        static constexpr float	CHARACTER_TEX_SCALE = 6.f;
+        static constexpr float	BOX_SCALE = 64.f;
+        static constexpr float	DAVE_TEX_SCALE = 6.f;
+        static constexpr float	BLOCK_TEX_SCALE = 6.f;
 
         static constexpr SDL_FRect RED_BLOCK {86,380,11,11};
 
@@ -190,11 +191,10 @@ namespace dave_game {
         static constexpr SDL_FRect DAVE_IDLE{ 155, 13, 7, 16 };
         static constexpr SDL_FRect DAVE_JUMPING{127,13,13,14};
 
+        static constexpr int WIN_WIDTH = MAP_WIDTH * RED_BLOCK.w * DAVE_TEX_SCALE;
+        static constexpr int WIN_HEIGHT = MAP_HEIGHT * RED_BLOCK.h * DAVE_TEX_SCALE;
         static constexpr SDL_FRect DIAMOND{ 14, 429, 10, 11 };
         static constexpr SDL_FRect DOOR{ 13, 234, 10, 11 };
-
-        static constexpr int WIN_WIDTH = MAP_WIDTH * RED_BLOCK.w * CHARACTER_TEX_SCALE;
-        static constexpr int WIN_HEIGHT = MAP_HEIGHT * RED_BLOCK.h * CHARACTER_TEX_SCALE;
 
         static constexpr uint8_t GRID_BACKGROUND = 0;
         static constexpr uint8_t GRID_RED_BLOCK = 1;

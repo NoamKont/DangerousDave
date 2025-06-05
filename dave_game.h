@@ -160,8 +160,9 @@ namespace dave_game {
 
         void createDave();
 
-        static constexpr float	BOX_SCALE = 10;
-        static constexpr float	CHARACTER_TEX_SCALE = 6.f;
+        static constexpr float	BOX_SCALE = 64.f;
+        static constexpr float	DAVE_TEX_SCALE = 6.f;
+        static constexpr float	BLOCK_TEX_SCALE = 6.f;
 
         static constexpr SDL_FRect RED_BLOCK {86,380,11,11};
 
@@ -188,8 +189,8 @@ namespace dave_game {
         static constexpr SDL_FRect DAVE_IDLE{ 155, 13, 7, 16 };
         static constexpr SDL_FRect DAVE_JUMPING{127,13,13,14};
 
-        static constexpr int WIN_WIDTH = MAP_WIDTH * RED_BLOCK.w * CHARACTER_TEX_SCALE;
-        static constexpr int WIN_HEIGHT = MAP_HEIGHT * RED_BLOCK.h * CHARACTER_TEX_SCALE;
+        static constexpr int WIN_WIDTH = MAP_WIDTH * RED_BLOCK.w * DAVE_TEX_SCALE;
+        static constexpr int WIN_HEIGHT = MAP_HEIGHT * RED_BLOCK.h * DAVE_TEX_SCALE;
 
         SDL_Texture* tex;
         SDL_Renderer* ren;
@@ -200,45 +201,85 @@ namespace dave_game {
         static inline bool map[10][20] =
             {
             /* row 0 (top border) */
-            { true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-              true,  true,  true,  true,  true,  true,  true,  true,  true,  true  },
-
+            { false,  false,  false, false, false, false,  false,  false, false, false,
+              false,  false, false, false,  false,  false, false, false, false,  false  },
             /* row 1 */
-            { true,  false,  false, false, false, false, false, false, false, false,
-              false, false, false, false, false, false, false, false, false,  true  },
+{ false,  false,  false, false, false, false,  false,  false, false, false,
+  false,  false, false, false,  false,  false, false, false, false,  false  },
 
             /* row 2 */
-            { true,  false, false, false, false, false, false, false, false, false,
-              false, false, false, false, false, false, false, false, false, true  },
+{ false,  false,  false, false, false, false,  false,  false, false, false,
+  false,  false, false, false,  false,  false, false, false, false,  false  },
 
             /* row 3 */
-            { true,  false, false, true,  false,  false, false, true,  false,  false,
-              false, true,  false,  false, false, true,  false,  false, false,  true  },
+{ false,  false,  false, false, false, false,  false,  false, false, false,
+  false,  false, false, false,  false,  false, false, false, false,  false  },
 
             /* row 4 */
-            { true,  false, false, false,  false, false, false, false,  false,  false,
-              false, false,  false,  false, false, false, false,  false, false,  true  },
+{ false,  false,  false, false, false, false,  false,  false, false, false,
+  false,  false, false, false,  false,  false, false, false, false,  false  },
 
             /* row 5 */
-            { true,  true,  false, false, false, true,  false,  false, false, true,
-              false,  false, false, false,  true,  false, false, false, true,  true  },
-
+{ false,  false,  false, false, false, false,  false,  false, false, false,
+  false,  false, false, false,  false,  false, false, false, false,  false  },
             /* row 6 */
-            { true,  false,  false, false, false, false,  false,  false, false, false,
-              false,  false, false, false,  false,  false, false, false, false,  true  },
+            { false,  false,  false, false, false, false,  false,  false, false, false,
+              false,  false, false, false,  false,  false, false, false, false,  false  },
 
             /* row 7 */
-            { true,  false, false, false, true,  true,  true,  true,  true,  false,
-              false, false,  true,  true,  true,  true,  true,  true,  false,  true  },
+{ false,  false,  false, false, false, false,  false,  false, false, false,
+  false,  false, false, false,  false,  false, false, false, false,  false  },
 
             /* row 8 */
-            { true,  false,  false, false, false, false,  false,  false, false, false,
-                false,  false, true, false,  false,  false, false, false, false,  true  },
+            { false,  false,  false, false, false, false,  false,  false, false, false,
+                false,  false, true, false,  false,  false, false, false, false,  false  },
 
             /* row 9 (bottom border) */
             { true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
               true,  true,  true,  true,  true,  true,  true,  true,  true,  true  }
         };
+        // static inline bool map[10][20] =
+        //     {
+        //     /* row 0 (top border) */
+        //     { true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
+        //       true,  true,  true,  true,  true,  true,  true,  true,  true,  true  },
+        //
+        //     /* row 1 */
+        //     { true,  false,  false, false, false, false, false, false, false, false,
+        //       false, false, false, false, false, false, false, false, false,  true  },
+        //
+        //     /* row 2 */
+        //     { true,  false, false, false, false, false, false, false, false, false,
+        //       false, false, false, false, false, false, false, false, false, true  },
+        //
+        //     /* row 3 */
+        //     { true,  false, false, true,  false,  false, false, true,  false,  false,
+        //       false, true,  false,  false, false, true,  false,  false, false,  true  },
+        //
+        //     /* row 4 */
+        //     { true,  false, false, false,  false, false, false, false,  false,  false,
+        //       false, false,  false,  false, false, false, false,  false, false,  true  },
+        //
+        //     /* row 5 */
+        //     { true,  true,  false, false, false, true,  false,  false, false, true,
+        //       false,  false, false, false,  true,  false, false, false, true,  true  },
+        //
+        //     /* row 6 */
+        //     { true,  false,  false, false, false, false,  false,  false, false, false,
+        //       false,  false, false, false,  false,  false, false, false, false,  true  },
+        //
+        //     /* row 7 */
+        //     { true,  false, false, false, true,  true,  true,  true,  true,  false,
+        //       false, false,  true,  true,  true,  true,  true,  true,  false,  true  },
+        //
+        //     /* row 8 */
+        //     { true,  false,  false, false, false, false,  false,  false, false, false,
+        //         false,  false, true, false,  false,  false, false, false, false,  true  },
+        //
+        //     /* row 9 (bottom border) */
+        //     { true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
+        //       true,  true,  true,  true,  true,  true,  true,  true,  true,  true  }
+        // };
 
 
     public:

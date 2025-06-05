@@ -178,6 +178,7 @@ namespace dave_game
                         if (anim.currentState != 0) {
                             anim.currentState = 0; // IDLE
                             anim.currentFrame = 0;
+                            groundStatus.onGround = true;
                         }
 
                     } else if (vel.y >= -ANIMATION_VELOCITY_THRESHOLD && vel.y <= ANIMATION_VELOCITY_THRESHOLD) {
@@ -185,6 +186,7 @@ namespace dave_game
                         if (anim.currentState != 1) {
                             anim.currentState = 1; // WALK
                             anim.currentFrame = 0;
+                            groundStatus.onGround = true;
                         }
                     }
                     else {
@@ -192,6 +194,7 @@ namespace dave_game
                         if (anim.currentState != 2) {
                             anim.currentState = 2; // JUMP
                             anim.currentFrame = 0;
+                            groundStatus.onGround = false;
                         }
                     }
 
@@ -345,7 +348,12 @@ namespace dave_game
         daveShapeDef.isSensor = true;
         daveShapeDef.density = 1; // Not needed for static, but harmless
 
-        b2Polygon daveBox = b2MakeBox((DAVE_STANDING.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2, (DAVE_STANDING.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
+        b2Polygon daveBox = b2MakeBox((DAVE_STANDING.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2 + 4, (DAVE_STANDING.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
+        b2CreatePolygonShape(daveBody, &daveShapeDef, &daveBox);
+
+        daveShapeDef.enableSensorEvents = false;
+        daveShapeDef.isSensor = false;
+        daveBox = b2MakeBox((DAVE_STANDING.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2, (DAVE_STANDING.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
         b2CreatePolygonShape(daveBody, &daveShapeDef, &daveBox);
 
         DAVE_ANIMATION = new Drawable*[3] {
@@ -382,7 +390,7 @@ namespace dave_game
          Dave{},
          GroundStatus{true}
          );
-        b2Body_SetUserData(daveBody, new ent_type{e.entity()});
+        //b2Body_SetUserData(pacmanBody, new ent_type{e.entity()});
 
         std::cout << "Dave entity created with ID: " << e.entity().id << std::endl;
     }
@@ -429,12 +437,66 @@ namespace dave_game
 
         for (int row = 0; row < DaveGame::MAP_HEIGHT; ++row) {
             for (int col = 0; col < DaveGame::MAP_WIDTH; ++col) {
-                if (DaveGame::map[row][col]) {
+                if (DaveGame::map[row][col] == DaveGame::GRID_RED_BLOCK) {
                     SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::CHARACTER_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::CHARACTER_TEX_SCALE};
                     createWall(p, DaveGame::RED_BLOCK.w * DaveGame::CHARACTER_TEX_SCALE, DaveGame::RED_BLOCK.h * DaveGame::CHARACTER_TEX_SCALE);
+                }
+                else if (DaveGame::map[row][col] == DaveGame::GRID_DIAMOND) {
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::CHARACTER_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::CHARACTER_TEX_SCALE};
+                    createDiamond(p);
+                }
+                else if (DaveGame::map[row][col] == DaveGame::GRID_DOOR) {
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::CHARACTER_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::CHARACTER_TEX_SCALE};
+                    createDoor(p);
                 }
             }
         }
 
+
+
+    }
+
+    void DaveGame::createDiamond(SDL_FPoint p) {
+
+        Entity diamond = Entity::create();
+
+        b2BodyDef diamondBodyDef = b2DefaultBodyDef();
+        diamondBodyDef.type = b2_staticBody;
+        diamondBodyDef.position = {p.x / BOX_SCALE, p.y / BOX_SCALE};
+        b2BodyId diamondBody = b2CreateBody(boxWorld, &diamondBodyDef);
+
+        b2ShapeDef diamondShapeDef = b2DefaultShapeDef();
+        diamondShapeDef.enableSensorEvents = true;
+        diamondShapeDef.isSensor = true;
+
+        b2Polygon diamondBox = b2MakeBox((DIAMOND.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2, (DIAMOND.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
+        b2CreatePolygonShape(diamondBody, &diamondShapeDef, &diamondBox);
+
+        diamond.addAll(
+            Position{p, 0},
+            Drawable{DIAMOND, CHARACTER_TEX_SCALE, true, false}
+            );
+    }
+
+    void DaveGame::createDoor(SDL_FPoint p) {
+
+        Entity door = Entity::create();
+
+        b2BodyDef doorBodyDef = b2DefaultBodyDef();
+        doorBodyDef.type = b2_staticBody;
+        doorBodyDef.position = {p.x / BOX_SCALE, p.y / BOX_SCALE};
+        b2BodyId doorBody = b2CreateBody(boxWorld, &doorBodyDef);
+
+        b2ShapeDef doorShapeDef = b2DefaultShapeDef();
+        doorShapeDef.enableSensorEvents = true;
+        doorShapeDef.isSensor = true;
+
+        b2Polygon diamondBox = b2MakeBox((DOOR.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2, (DOOR.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
+        b2CreatePolygonShape(doorBody, &doorShapeDef, &diamondBox);
+
+        door.addAll(
+            Position{p, 0},
+            Drawable{DOOR, CHARACTER_TEX_SCALE, true, false}
+            );
     }
 }

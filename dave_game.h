@@ -157,6 +157,8 @@ namespace dave_game {
         void prepareWalls() const;
         void createWall(SDL_FPoint p, float w, float h) const;
         void createMap();
+        void createDiamond(SDL_FPoint p);
+        void createDoor(SDL_FPoint p);
 
         void createDave();
 
@@ -188,8 +190,16 @@ namespace dave_game {
         static constexpr SDL_FRect DAVE_IDLE{ 155, 13, 7, 16 };
         static constexpr SDL_FRect DAVE_JUMPING{127,13,13,14};
 
+        static constexpr SDL_FRect DIAMOND{ 14, 429, 10, 11 };
+        static constexpr SDL_FRect DOOR{ 13, 234, 10, 11 };
+
         static constexpr int WIN_WIDTH = MAP_WIDTH * RED_BLOCK.w * CHARACTER_TEX_SCALE;
         static constexpr int WIN_HEIGHT = MAP_HEIGHT * RED_BLOCK.h * CHARACTER_TEX_SCALE;
+
+        static constexpr uint8_t GRID_BACKGROUND = 0;
+        static constexpr uint8_t GRID_RED_BLOCK = 1;
+        static constexpr uint8_t GRID_DIAMOND = 2;
+        static constexpr uint8_t GRID_DOOR = 3;
 
         SDL_Texture* tex;
         SDL_Renderer* ren;
@@ -197,48 +207,67 @@ namespace dave_game {
 
         b2WorldId boxWorld = b2_nullWorldId;
 
-        static inline bool map[10][20] =
-            {
-            /* row 0 (top border) */
-            { true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-              true,  true,  true,  true,  true,  true,  true,  true,  true,  true  },
+        static inline uint8_t map[10][20] = {
+    /* row 0 (top border) */
+    { GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
+      GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
+      GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
+      GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK },
 
-            /* row 1 */
-            { true,  false,  false, false, false, false, false, false, false, false,
-              false, false, false, false, false, false, false, false, false,  true  },
+    /* row 1 */
+    { GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK },
 
-            /* row 2 */
-            { true,  false, false, false, false, false, false, false, false, false,
-              false, false, false, false, false, false, false, false, false, true  },
+    /* row 2 */
+    { GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_DIAMOND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_DIAMOND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK },
 
-            /* row 3 */
-            { true,  false, false, true,  false,  false, false, true,  false,  false,
-              false, true,  false,  false, false, true,  false,  false, false,  true  },
+    /* row 3 */
+    { GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK },
 
-            /* row 4 */
-            { true,  false, false, false,  false, false, false, false,  false,  false,
-              false, false,  false,  false, false, false, false,  false, false,  true  },
+    /* row 4 */
+    { GRID_RED_BLOCK, GRID_DIAMOND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_DIAMOND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND, GRID_RED_BLOCK },
 
-            /* row 5 */
-            { true,  true,  false, false, false, true,  false,  false, false, true,
-              false,  false, false, false,  true,  false, false, false, true,  true  },
+    /* row 5 */
+    { GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK, GRID_RED_BLOCK },
 
-            /* row 6 */
-            { true,  false,  false, false, false, false,  false,  false, false, false,
-              false,  false, false, false,  false,  false, false, false, false,  true  },
+    /* row 6 */
+    { GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK },
 
-            /* row 7 */
-            { true,  false, false, false, true,  true,  true,  true,  true,  false,
-              false, false,  true,  true,  true,  true,  true,  true,  false,  true  },
+    /* row 7 */
+    { GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK,
+      GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
+      GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_BACKGROUND, GRID_RED_BLOCK },
 
-            /* row 8 */
-            { true,  false,  false, false, false, false,  false,  false, false, false,
-                false,  false, true, false,  false,  false, false, false, false,  true  },
+    /* row 8 */
+    { GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK, GRID_DOOR, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK },
 
-            /* row 9 (bottom border) */
-            { true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-              true,  true,  true,  true,  true,  true,  true,  true,  true,  true  }
-        };
+    /* row 9 (bottom border) */
+    { GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
+      GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
+      GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
+      GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK }
+};
 
 
     public:

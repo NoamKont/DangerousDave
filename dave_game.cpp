@@ -356,6 +356,7 @@ namespace dave_game
         daveBox = b2MakeBox((DAVE_STANDING.w*CHARACTER_TEX_SCALE/BOX_SCALE)/2, (DAVE_STANDING.h*CHARACTER_TEX_SCALE/BOX_SCALE)/2);
         b2CreatePolygonShape(daveBody, &daveShapeDef, &daveBox);
 
+
         DAVE_ANIMATION = new Drawable*[3] {
             new Drawable[4] { //IDLE
                 {DAVE_IDLE, CHARACTER_TEX_SCALE, true, false},

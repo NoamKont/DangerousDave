@@ -74,9 +74,9 @@ namespace dave_game {
     struct Dave { };
 
     /**
-     * @brief Tag component to identify ghost entities.
+     * @brief Tag component to identify monster entities.
      */
-    struct Ghost { };
+    struct Monster { };
 
     /**
      * @brief Tag component for wall entities.
@@ -127,14 +127,14 @@ namespace dave_game {
 
 /// @brief Marks the entity as dead (for cleanup or state transition).
     struct Dead {};
-/// @brief Marks whether Dave is on the ground
 
+/// @brief Marks whether Dave is on the ground
     struct GroundStatus {
         bool onGround = false;
-    }
-    using Grid = struct {
-        bool grid[10][20];
     };
+
+/// @brief Marks if the entity is a trophy
+    struct Trophy {};
 
 
 

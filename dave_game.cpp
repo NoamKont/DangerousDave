@@ -50,7 +50,7 @@ namespace dave_game
         SDL_srand(time(nullptr));
 
         prepareBoxWorld();
-        createMap();
+        createMap(&map_stage2[0][0], MAP_WIDTH * 2, MAP_HEIGHT);
 
 
         createDave();
@@ -348,7 +348,7 @@ namespace dave_game
             }
 
             const SDL_FRect dst = {
-                pos.p.x - drawable.part.w / 2,
+                pos.p.x - drawable.part.w / 2 - gameInfo.screenOffset * (!drawable.isStatic) * WIN_WIDTH + BLOCK_TEX_SCALE,
                     pos.p.y - drawable.part.h / 2,
                     drawable.part.w * drawable.scale,
                     drawable.part.h * drawable.scale
@@ -496,24 +496,25 @@ namespace dave_game
         b2Body_SetUserData(wallBody, new ent_type{e.entity()});
     }
 
-    void DaveGame::createMap() {
+    void DaveGame::createMap(uint8_t* map, int width, int height) {
 
-        for (int row = 0; row < DaveGame::MAP_HEIGHT; ++row) {
-            for (int col = 0; col < DaveGame::MAP_WIDTH; ++col) {
+        for (int row = 0; row < height; ++row) {
+            for (int col = 0; col < width; ++col) {
                 int row_to_print = row + 1;
-                if (DaveGame::map[row][col] == DaveGame::GRID_RED_BLOCK) {
+                uint8_t* map_row = (map + row * width);
+                if (map_row[col] == DaveGame::GRID_RED_BLOCK) {
                     SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
                     createWall(p, DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE);
                 }
-                else if (DaveGame::map[row][col] == DaveGame::GRID_DIAMOND) {
+                else if (map_row[col] == DaveGame::GRID_DIAMOND) {
                     SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
                     createDiamond(p);
                 }
-                else if (DaveGame::map[row][col] == DaveGame::GRID_DOOR) {
+                else if (map_row[col] == DaveGame::GRID_DOOR) {
                     SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
                     createDoor(p);
                 }
-                else if (DaveGame::map[row][col] == DaveGame::GRID_TROPHY) {
+                else if (map_row[col] == DaveGame::GRID_TROPHY) {
                     SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
                     createTrophy(p);
                 }
@@ -582,26 +583,26 @@ namespace dave_game
         auto score = Entity::create();
         score.addAll(
             Position{{25, 10}, 0},
-            Drawable{{192, 214, 39, 7}, BLOCK_TEX_SCALE, true, false}
+            Drawable{{192, 214, 39, 7}, BLOCK_TEX_SCALE, true, false, true}
         );
 
 
         auto level = Entity::create();
         level.addAll(
             Position{{500, 10}, 0},
-            Drawable{{146, 214, 33, 7}, BLOCK_TEX_SCALE, true, false}
+            Drawable{{146, 214, 33, 7}, BLOCK_TEX_SCALE, true, false, true}
         );
 
         auto daves = Entity::create();
         daves.addAll(
             Position{{800, 10}, 0},
-            Drawable{{102, 214, 37, 7}, BLOCK_TEX_SCALE, true, false}
+            Drawable{{102, 214, 37, 7}, BLOCK_TEX_SCALE, true, false, true}
         );
 
         auto openDoor = Entity::create();
         openDoor.addAll(
             Position{{300, 11 * RED_BLOCK.h * BLOCK_TEX_SCALE}, 0},
-            Drawable{{1, 223, 123, 10}, BLOCK_TEX_SCALE, false, false},
+            Drawable{{1, 223, 123, 10}, BLOCK_TEX_SCALE, false, false, true},
             DoorLabel{}
         );
     }

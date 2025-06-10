@@ -210,16 +210,16 @@ namespace dave_game
 
     void DaveGame::renderGoThruTheDoor() {
         cout << "Rendering go through the door" << endl;
-        // static const Mask mask = MaskBuilder()
-        //            .set<DoorLabel>()
-        //            .build();
-        //
-        // for (ent_type e{0}; e.id <= World::maxId().id; ++e.id) {
-        //     if (World::mask(e).test(mask)) {
-        //         auto& d = World::getComponent<Drawable>(e);
-        //         d.visible = true;
-        //     }
-        // }
+        static const Mask mask = MaskBuilder()
+                   .set<DoorLabel>()
+                   .build();
+
+        for (ent_type e{0}; e.id <= World::maxId().id; ++e.id) {
+            if (World::mask(e).test(mask)) {
+                auto& d = World::getComponent<Drawable>(e);
+                d.visible = true;
+            }
+        }
 
     }
 
@@ -487,7 +487,7 @@ namespace dave_game
                     createDoor(p);
                 }
                 else if (DaveGame::map[row][col] == DaveGame::GRID_TROPHY) {
-                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
                     createTrophy(p);
                 }
             }

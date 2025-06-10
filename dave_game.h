@@ -110,6 +110,8 @@ namespace dave_game {
         bool open = false;
     };
 
+    struct Diamond {};
+
 /// @brief Score value of a collectible entity.
     struct PrizeValue {
         int score = -1; ///< Actual score value must be set during entity creation

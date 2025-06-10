@@ -167,13 +167,13 @@ namespace dave_game
 
                     if (i.up && groundStatus.onGround) {
 
+                        groundStatus.onGround = false;
                         float jumpVelocity = 5.4f;
                         float mass = b2Body_GetMass(c.b);
                         b2Vec2 impulse = {0.0f, -mass * jumpVelocity};
                         b2Body_ApplyLinearImpulseToCenter(c.b, impulse, true);
 
                         //b2Body_SetLinearVelocity(c.b,{0, -15});
-                        groundStatus.onGround = false;
                     }
 
                     if (vel.x >= -ANIMATION_VELOCITY_THRESHOLD && vel.x <= ANIMATION_VELOCITY_THRESHOLD && vel.y >= -ANIMATION_VELOCITY_THRESHOLD && vel.y <= ANIMATION_VELOCITY_THRESHOLD) {
@@ -221,6 +221,8 @@ namespace dave_game
             bool sensorIsDave = World::mask(*sensorEntity).test(Component<Dave>::Bit);
 
             bool visitorIsWall = World::mask(*visitorEntity).test(Component<Wall>::Bit);
+            bool visitorIsDiamond = World::mask(*visitorEntity).test(Component<Diamond>::Bit);
+
             bool visitorIsPrize = World::mask(*visitorEntity).test(Component<PrizeValue>::Bit);
             bool visitorIsMonster = World::mask(*visitorEntity).test(Component<Monster>::Bit);
             bool visitorIsTrophy = World::mask(*visitorEntity).test(Component<Trophy>::Bit);
@@ -229,6 +231,10 @@ namespace dave_game
             {
                 auto& groundStatus = World::getComponent<GroundStatus>(*sensorEntity);
                 groundStatus.onGround = true;
+            }
+            else if (sensorIsDave && visitorIsDiamond) {
+                World::destroyEntity(*visitorEntity);
+                b2DestroyBody(visitor);
             }
         }
     }
@@ -477,8 +483,10 @@ namespace dave_game
 
         diamond.addAll(
             Position{p, 0},
-            Drawable{DIAMOND, BLOCK_TEX_SCALE, true, false}
-            );
+            Drawable{DIAMOND, BLOCK_TEX_SCALE, true, false},
+            Diamond{}
+        );
+        b2Body_SetUserData(diamondBody, new ent_type{diamond.entity()});
     }
 
     void DaveGame::createDoor(SDL_FPoint p) {
@@ -499,7 +507,10 @@ namespace dave_game
 
         door.addAll(
             Position{p, 0},
-            Drawable{DOOR, BLOCK_TEX_SCALE, true, false}
-            );
+            Drawable{DOOR, BLOCK_TEX_SCALE, true, false},
+            Door{false}
+        );
+        b2Body_SetUserData(doorBody, new ent_type{door.entity()});
+
     }
 }

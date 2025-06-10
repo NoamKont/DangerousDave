@@ -138,7 +138,7 @@ namespace dave_game {
 /// @brief Marks if the entity is a trophy
     struct Trophy {};
 
-
+    struct DoorLabel{};
 
 
 
@@ -161,6 +161,9 @@ namespace dave_game {
         void createMap();
         void createDiamond(SDL_FPoint p);
         void createDoor(SDL_FPoint p);
+        void createStatusBar();
+        void createTitles();
+        void createScoreBar();
 
         void createDave();
 
@@ -183,6 +186,18 @@ namespace dave_game {
         static constexpr float	ANIMATION_VELOCITY_THRESHOLD = 0.5f; // Velocity threshold to switch between animation states
 
         static inline  Drawable** DAVE_ANIMATION = nullptr;
+        static inline Drawable* NUMBERS_SPRITES = new Drawable[10] {
+            { { 294, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 0
+            { { 237, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 1
+            { { 243, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 2
+            { { 250, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 3
+            { { 256, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 4
+            { { 262, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 5
+            { { 269, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 6
+            { { 275, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 7
+            { { 282, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 8
+            { { 288, 214, 6, 7 }, DAVE_TEX_SCALE ,true ,false }  // Placeholder for index 9
+        };
 
 
         static constexpr SDL_FRect DAVE_STANDING{ 5, 13, 8, 16 };
@@ -193,8 +208,9 @@ namespace dave_game {
         static constexpr SDL_FRect DAVE_IDLE{ 155, 13, 7, 16 };
         static constexpr SDL_FRect DAVE_JUMPING{127,13,13,14};
 
+        static constexpr int STATUS_BAR_HEIGHT = 2;
         static constexpr int WIN_WIDTH = MAP_WIDTH * RED_BLOCK.w * DAVE_TEX_SCALE;
-        static constexpr int WIN_HEIGHT = MAP_HEIGHT * RED_BLOCK.h * DAVE_TEX_SCALE;
+        static constexpr int WIN_HEIGHT = (MAP_HEIGHT + STATUS_BAR_HEIGHT) * RED_BLOCK.h * DAVE_TEX_SCALE;
         static constexpr SDL_FRect DIAMOND{ 14, 429, 10, 11 };
         static constexpr SDL_FRect DOOR{ 13, 234, 10, 11 };
 
@@ -203,9 +219,13 @@ namespace dave_game {
         static constexpr uint8_t GRID_DIAMOND = 2;
         static constexpr uint8_t GRID_DOOR = 3;
 
+        static constexpr int SCORE_DIGITS_COUNT = 5;
+
         SDL_Texture* tex;
         SDL_Renderer* ren;
         SDL_Window* win;
+        ent_type scoreEntities[SCORE_DIGITS_COUNT];
+        GameInfo gameInfo;
 
         b2WorldId boxWorld = b2_nullWorldId;
 
@@ -270,6 +290,8 @@ namespace dave_game {
       GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
       GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK }
 };
+
+
 
 
     public:

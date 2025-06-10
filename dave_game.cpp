@@ -53,6 +53,7 @@ namespace dave_game
 
 
         createDave();
+        createStatusBar();
 
     }
 
@@ -262,6 +263,7 @@ namespace dave_game
         }
     }
 
+
     /// @brief Renders entities with Image, Position, and GameInfo components.
     /// Also checks optional components like Course, Collision, Gun, and Jetpack.
     void DaveGame::RenderSystem()
@@ -284,6 +286,11 @@ namespace dave_game
 
             const auto& pos = World::getComponent<Position>(e);
             const auto& drawable = World::getComponent<Drawable>(e);
+
+            if (!drawable.visible)
+            {
+                continue; // Skip rendering if not visible
+            }
 
             const SDL_FRect dst = {
                 pos.p.x - drawable.part.w / 2,
@@ -367,6 +374,7 @@ namespace dave_game
         b2CreatePolygonShape(daveBody, &daveShapeDef2, &daveBox2);
 
 
+
         DAVE_ANIMATION = new Drawable*[3] {
             new Drawable[4] { //IDLE
                 {DAVE_IDLE, DAVE_TEX_SCALE, true, false},
@@ -406,17 +414,6 @@ namespace dave_game
         std::cout << "Dave entity created with ID: " << e.entity().id << std::endl;
     }
 
-    // /// @brief Creates a monster entity.
-    // void DaveGame::prepareWalls() const {
-    //     //upper and lower borders
-    //     createWall({WIN_WIDTH  / 2.0f, 0.0f},WIN_WIDTH,5.f);
-    //     createWall({WIN_WIDTH  / 2.0f, WIN_HEIGHT},WIN_WIDTH ,125.f);
-    //     //side borders
-    //     createWall({0.0f, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
-    //     createWall({WIN_WIDTH, WIN_HEIGHT / 2.0f},5.f, WIN_HEIGHT);
-    //
-    // }
-
     void DaveGame::createWall(SDL_FPoint p, float w, float h) const {
         const float width = w;
         const float height = h;
@@ -448,21 +445,22 @@ namespace dave_game
 
         for (int row = 0; row < DaveGame::MAP_HEIGHT; ++row) {
             for (int col = 0; col < DaveGame::MAP_WIDTH; ++col) {
+                int row_to_print = row + 1;
                 if (DaveGame::map[row][col] == DaveGame::GRID_RED_BLOCK) {
-                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
                     createWall(p, DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE);
                 }
                 else if (DaveGame::map[row][col] == DaveGame::GRID_DIAMOND) {
-                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
                     createDiamond(p);
                 }
                 else if (DaveGame::map[row][col] == DaveGame::GRID_DOOR) {
-                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
                     createDoor(p);
                 }
             }
         }
-        
+
     }
 
     void DaveGame::createDiamond(SDL_FPoint p) {
@@ -511,6 +509,55 @@ namespace dave_game
             Door{false}
         );
         b2Body_SetUserData(doorBody, new ent_type{door.entity()});
+
+    }
+
+    void DaveGame::createStatusBar() {
+        createTitles();
+        createScoreBar();
+
+    }
+
+    void DaveGame::createTitles() {
+
+        auto score = Entity::create();
+        score.addAll(
+            Position{{25, 10}, 0},
+            Drawable{{192, 214, 39, 7}, DAVE_TEX_SCALE, true, false}
+        );
+
+
+        auto level = Entity::create();
+        level.addAll(
+            Position{{500, 10}, 0},
+            Drawable{{146, 214, 33, 7}, DAVE_TEX_SCALE, true, false}
+        );
+
+        auto daves = Entity::create();
+        daves.addAll(
+            Position{{800, 10}, 0},
+            Drawable{{102, 214, 37, 7}, DAVE_TEX_SCALE, true, false}
+        );
+
+        auto openDoor = Entity::create();
+        openDoor.addAll(
+            Position{{300, 11 * RED_BLOCK.h * BLOCK_TEX_SCALE}, 0},
+            Drawable{{1, 223, 123, 10}, DAVE_TEX_SCALE, false, false},
+            DoorLabel{}
+        );
+    }
+
+    void DaveGame::createScoreBar() {
+
+        for (int i=0; i < SCORE_DIGITS_COUNT; ++i) {
+            auto entity = Entity::create();
+            entity.addAll(
+                Position{{(i+1) * 40.f + 210, 10}, 0},
+                Drawable{NUMBERS_SPRITES[i+5]}
+            );
+
+            scoreEntities[i] = entity.entity();
+        }
 
     }
 }

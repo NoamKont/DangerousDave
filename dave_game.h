@@ -151,7 +151,7 @@ namespace dave_game {
         void CollisionSystem();
         void RenderSystem();
         void InputSystem();
-        void ScoreSystem();
+        void StatusBarSystem();
         void CollectSystem();
         void DeathSystem();
         void AnimationSystem();
@@ -165,6 +165,8 @@ namespace dave_game {
         void createStatusBar();
         void createTitles();
         void createScoreBar();
+        void createLevelAndHealth();
+
         void createTrophy(SDL_FPoint p);
 
         void EndGame();
@@ -203,6 +205,10 @@ namespace dave_game {
             { { 288, 214, 6, 7 }, BLOCK_TEX_SCALE ,true ,false , true}  // Placeholder for index 9
         };
 
+        static constexpr SDL_FRect DAVE_HEALTH{ 1, 213, 8, 9 };
+        static constexpr SDL_FRect SCORE_SPRITE{192, 214, 39, 7};
+        static constexpr SDL_FRect LEVEL_SPRITE{146, 214, 33, 7};
+        static constexpr SDL_FRect HEALTH_SPRITE{102, 214, 37, 7};
 
         static constexpr SDL_FRect DAVE_STANDING{ 5, 13, 8, 16 };
         static constexpr SDL_FRect DAVE_WALKING_1{27,13,12,16};
@@ -231,6 +237,7 @@ namespace dave_game {
         SDL_Renderer* ren;
         SDL_Window* win;
         ent_type scoreEntities[SCORE_DIGITS_COUNT];
+        ent_type levelEntity;
         GameInfo gameInfo;
 
         b2WorldId boxWorld = b2_nullWorldId;
@@ -377,9 +384,9 @@ static inline uint8_t map_stage2[10][40] = {
         GRID_BACKGROUND,
 
         // repeat
-        GRID_BACKGROUND,
-        GRID_DIAMOND,   GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
-        GRID_DIAMOND,   GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND,
+        GRID_DIAMOND,
+        GRID_BACKGROUND,   GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND,
+        GRID_BACKGROUND,   GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND, GRID_BACKGROUND,
         GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND, GRID_BACKGROUND,
         GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND,
         GRID_RED_BLOCK

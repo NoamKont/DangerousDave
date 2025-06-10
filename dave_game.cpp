@@ -25,7 +25,7 @@ namespace dave_game
             box_system();
             CollisionSystem();
             AnimationSystem();
-            ScoreSystem();
+            StatusBarSystem();
             RenderSystem();
 
             auto end = SDL_GetTicks();
@@ -301,7 +301,7 @@ namespace dave_game
         }
     }
 
-    void DaveGame::ScoreSystem() {
+    void DaveGame::StatusBarSystem() {
         int score = gameInfo.score;
 
         for (int i = SCORE_DIGITS_COUNT - 1; i >= 0; --i) {
@@ -316,6 +316,9 @@ namespace dave_game
                 }
             }
         }
+
+        auto& levelDrawable = World::getComponent<Drawable>(levelEntity);
+        levelDrawable.part = NUMBERS_SPRITES[gameInfo.level].part;
     }
 
 
@@ -575,6 +578,7 @@ namespace dave_game
     void DaveGame::createStatusBar() {
         createTitles();
         createScoreBar();
+        createLevelAndHealth();
 
     }
 
@@ -583,20 +587,20 @@ namespace dave_game
         auto score = Entity::create();
         score.addAll(
             Position{{25, 10}, 0},
-            Drawable{{192, 214, 39, 7}, BLOCK_TEX_SCALE, true, false, true}
+            Drawable{SCORE_SPRITE, BLOCK_TEX_SCALE, true, false, true}
         );
 
 
         auto level = Entity::create();
         level.addAll(
             Position{{500, 10}, 0},
-            Drawable{{146, 214, 33, 7}, BLOCK_TEX_SCALE, true, false, true}
+            Drawable{LEVEL_SPRITE, BLOCK_TEX_SCALE, true, false, true}
         );
 
         auto daves = Entity::create();
         daves.addAll(
             Position{{800, 10}, 0},
-            Drawable{{102, 214, 37, 7}, BLOCK_TEX_SCALE, true, false, true}
+            Drawable{HEALTH_SPRITE, BLOCK_TEX_SCALE, true, false, true}
         );
 
         auto openDoor = Entity::create();
@@ -618,6 +622,34 @@ namespace dave_game
 
             scoreEntities[i] = entity.entity();
         }
+
+    }
+    void DaveGame::createLevelAndHealth() {
+
+        Entity level = Entity::create();
+        level.addAll(
+            Position{{700, 10}, 0},
+            Drawable{NUMBERS_SPRITES[0]}
+        );
+        levelEntity = level.entity();
+
+        Entity health1 = Entity::create();
+        health1.addAll(
+            Position{{1020, 10}, 0},
+            Drawable{DAVE_HEALTH, BLOCK_TEX_SCALE, true, false, true}
+        );
+        Entity health2 = Entity::create();
+        health2.addAll(
+            Position{{1070, 10}, 0},
+            Drawable{DAVE_HEALTH, BLOCK_TEX_SCALE, true, false, true}
+        );
+        Entity health3 = Entity::create();
+        health3.addAll(
+            Position{{1120, 10}, 0},
+            Drawable{DAVE_HEALTH, BLOCK_TEX_SCALE, true, false, true}
+        );
+
+
 
     }
     void DaveGame::createTrophy(SDL_FPoint p) {

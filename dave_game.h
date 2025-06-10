@@ -168,7 +168,7 @@ namespace dave_game {
         void createDave();
 
         static constexpr float	BOX_SCALE = 64.f;
-        static constexpr float	DAVE_TEX_SCALE = 6.f;
+        static constexpr float	DAVE_TEX_SCALE = 4.f;
         static constexpr float	BLOCK_TEX_SCALE = 6.f;
 
         static constexpr SDL_FRect RED_BLOCK {86,380,11,11};
@@ -187,16 +187,16 @@ namespace dave_game {
 
         static inline  Drawable** DAVE_ANIMATION = nullptr;
         static inline Drawable* NUMBERS_SPRITES = new Drawable[10] {
-            { { 294, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 0
-            { { 237, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 1
-            { { 243, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 2
-            { { 250, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 3
-            { { 256, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 4
-            { { 262, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 5
-            { { 269, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 6
-            { { 275, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 7
-            { { 282, 214, 6, 7 }, DAVE_TEX_SCALE, true, false }, // Placeholder for index 8
-            { { 288, 214, 6, 7 }, DAVE_TEX_SCALE ,true ,false }  // Placeholder for index 9
+            { { 294, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false }, // Placeholder for index 0
+            { { 237, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false }, // Placeholder for index 1
+            { { 243, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false }, // Placeholder for index 2
+            { { 250, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false }, // Placeholder for index 3
+            { { 256, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false }, // Placeholder for index 4
+            { { 262, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false }, // Placeholder for index 5
+            { { 269, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false }, // Placeholder for index 6
+            { { 275, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false }, // Placeholder for index 7
+            { { 282, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false }, // Placeholder for index 8
+            { { 288, 214, 6, 7 }, BLOCK_TEX_SCALE ,true ,false }  // Placeholder for index 9
         };
 
 
@@ -209,8 +209,8 @@ namespace dave_game {
         static constexpr SDL_FRect DAVE_JUMPING{127,13,13,14};
 
         static constexpr int STATUS_BAR_HEIGHT = 2;
-        static constexpr int WIN_WIDTH = MAP_WIDTH * RED_BLOCK.w * DAVE_TEX_SCALE;
-        static constexpr int WIN_HEIGHT = (MAP_HEIGHT + STATUS_BAR_HEIGHT) * RED_BLOCK.h * DAVE_TEX_SCALE;
+        static constexpr int WIN_WIDTH = MAP_WIDTH * RED_BLOCK.w * BLOCK_TEX_SCALE;
+        static constexpr int WIN_HEIGHT = (MAP_HEIGHT + STATUS_BAR_HEIGHT) * RED_BLOCK.h * BLOCK_TEX_SCALE;
         static constexpr SDL_FRect DIAMOND{ 14, 429, 10, 11 };
         static constexpr SDL_FRect DOOR{ 13, 234, 10, 11 };
         static constexpr SDL_FRect TROPHY{ 38, 247, 10, 10 };

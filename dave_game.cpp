@@ -25,6 +25,7 @@ namespace dave_game
             box_system();
             CollisionSystem();
             AnimationSystem();
+            ScoreSystem();
             RenderSystem();
 
             auto end = SDL_GetTicks();
@@ -241,13 +242,14 @@ namespace dave_game
             bool visitorIsDoor = World::mask(*visitorEntity).test(Component<Door>::Bit);
             bool visitorIsTrophy = World::mask(*visitorEntity).test(Component<Trophy>::Bit);
 
-
             if(sensorIsDave && visitorIsWall)
             {
                 auto& groundStatus = World::getComponent<GroundStatus>(*sensorEntity);
                 groundStatus.onGround = true;
             }
             else if (sensorIsDave && visitorIsDiamond) {
+                auto& diamond = World::getComponent<Diamond>(*sensorEntity);
+                gameInfo.score +=  diamond.value;
                 World::destroyEntity(*visitorEntity);
                 b2DestroyBody(visitor);
             }
@@ -258,7 +260,7 @@ namespace dave_game
                 }
             }
             else if (sensorIsDave && visitorIsTrophy) {
-                auto& gameInfo = World::getComponent<GameInfo>(*sensorEntity);
+                //auto& gameInfo = World::getComponent<GameInfo>(*sensorEntity);
                 auto& trophy = World::getComponent<Trophy>(*sensorEntity);
                 gameInfo.score += trophy.value; // Increase score by 100 for collecting a trophy
                 World::destroyEntity(*visitorEntity);
@@ -287,6 +289,23 @@ namespace dave_game
                     {t.p.x*BOX_SCALE, t.p.y*BOX_SCALE},
                     RAD_TO_DEG * b2Rot_GetAngle(t.q)
                 };
+            }
+        }
+    }
+
+    void DaveGame::ScoreSystem() {
+        int score = gameInfo.score;
+
+        for (int i = SCORE_DIGITS_COUNT - 1; i >= 0; --i) {
+            int digit = score % 10;
+            score /= 10;
+
+            if (i < SCORE_DIGITS_COUNT) {
+                ent_type e = scoreEntities[i];
+                if (World::mask(e).test(Component<Drawable>::Bit)) {
+                    auto& drawable = World::getComponent<Drawable>(e);
+                    drawable.part = NUMBERS_SPRITES[digit].part;
+                }
             }
         }
     }
@@ -464,7 +483,7 @@ namespace dave_game
             Position{p, 0},
             Collider{wallBody},
             Wall{shape, {width, height}},
-            Drawable{{86,380,11,11},DAVE_TEX_SCALE,true,false}
+            Drawable{{86,380,11,11},BLOCK_TEX_SCALE, true,false}
         );
         b2Body_SetUserData(wallBody, new ent_type{e.entity()});
     }
@@ -555,26 +574,26 @@ namespace dave_game
         auto score = Entity::create();
         score.addAll(
             Position{{25, 10}, 0},
-            Drawable{{192, 214, 39, 7}, DAVE_TEX_SCALE, true, false}
+            Drawable{{192, 214, 39, 7}, BLOCK_TEX_SCALE, true, false}
         );
 
 
         auto level = Entity::create();
         level.addAll(
             Position{{500, 10}, 0},
-            Drawable{{146, 214, 33, 7}, DAVE_TEX_SCALE, true, false}
+            Drawable{{146, 214, 33, 7}, BLOCK_TEX_SCALE, true, false}
         );
 
         auto daves = Entity::create();
         daves.addAll(
             Position{{800, 10}, 0},
-            Drawable{{102, 214, 37, 7}, DAVE_TEX_SCALE, true, false}
+            Drawable{{102, 214, 37, 7}, BLOCK_TEX_SCALE, true, false}
         );
 
         auto openDoor = Entity::create();
         openDoor.addAll(
             Position{{300, 11 * RED_BLOCK.h * BLOCK_TEX_SCALE}, 0},
-            Drawable{{1, 223, 123, 10}, DAVE_TEX_SCALE, false, false},
+            Drawable{{1, 223, 123, 10}, BLOCK_TEX_SCALE, false, false},
             DoorLabel{}
         );
     }

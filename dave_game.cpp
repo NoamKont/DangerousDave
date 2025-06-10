@@ -208,6 +208,21 @@ namespace dave_game
         }
     }
 
+    void DaveGame::renderGoThruTheDoor() {
+        cout << "Rendering go through the door" << endl;
+        // static const Mask mask = MaskBuilder()
+        //            .set<DoorLabel>()
+        //            .build();
+        //
+        // for (ent_type e{0}; e.id <= World::maxId().id; ++e.id) {
+        //     if (World::mask(e).test(mask)) {
+        //         auto& d = World::getComponent<Drawable>(e);
+        //         d.visible = true;
+        //     }
+        // }
+
+    }
+
     void DaveGame::CollisionSystem()
     {
         const auto sensorEvents = b2World_GetSensorEvents(boxWorld);
@@ -223,10 +238,9 @@ namespace dave_game
 
             bool visitorIsWall = World::mask(*visitorEntity).test(Component<Wall>::Bit);
             bool visitorIsDiamond = World::mask(*visitorEntity).test(Component<Diamond>::Bit);
-
-            bool visitorIsPrize = World::mask(*visitorEntity).test(Component<PrizeValue>::Bit);
-            bool visitorIsMonster = World::mask(*visitorEntity).test(Component<Monster>::Bit);
+            bool visitorIsDoor = World::mask(*visitorEntity).test(Component<Door>::Bit);
             bool visitorIsTrophy = World::mask(*visitorEntity).test(Component<Trophy>::Bit);
+
 
             if(sensorIsDave && visitorIsWall)
             {
@@ -236,6 +250,20 @@ namespace dave_game
             else if (sensorIsDave && visitorIsDiamond) {
                 World::destroyEntity(*visitorEntity);
                 b2DestroyBody(visitor);
+            }
+            else if (sensorIsDave && visitorIsDoor) {
+                auto& door = World::getComponent<Door>(*visitorEntity);
+                if (door.open) {
+
+                }
+            }
+            else if (sensorIsDave && visitorIsTrophy) {
+                auto& gameInfo = World::getComponent<GameInfo>(*sensorEntity);
+                auto& trophy = World::getComponent<Trophy>(*sensorEntity);
+                gameInfo.score += trophy.value; // Increase score by 100 for collecting a trophy
+                World::destroyEntity(*visitorEntity);
+                b2DestroyBody(visitor);
+                renderGoThruTheDoor();
             }
         }
     }
@@ -458,6 +486,10 @@ namespace dave_game
                     SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
                     createDoor(p);
                 }
+                else if (DaveGame::map[row][col] == DaveGame::GRID_TROPHY) {
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
+                    createTrophy(p);
+                }
             }
         }
 
@@ -558,6 +590,30 @@ namespace dave_game
 
             scoreEntities[i] = entity.entity();
         }
+
+    }
+    void DaveGame::createTrophy(SDL_FPoint p) {
+
+
+        b2BodyDef trophyBodyDef = b2DefaultBodyDef();
+        trophyBodyDef.type = b2_staticBody;
+        trophyBodyDef.position = {p.x / BOX_SCALE, p.y / BOX_SCALE};
+        b2BodyId trophyBody = b2CreateBody(boxWorld, &trophyBodyDef);
+
+        b2ShapeDef trophyShapeDef = b2DefaultShapeDef();
+        trophyShapeDef.enableSensorEvents = true;
+
+        b2Polygon diamondBox = b2MakeBox((TROPHY.w*BLOCK_TEX_SCALE/BOX_SCALE)/2, (TROPHY.h*BLOCK_TEX_SCALE/BOX_SCALE)/2);
+        b2CreatePolygonShape(trophyBody, &trophyShapeDef, &diamondBox);
+
+
+        Entity trophy = Entity::create();
+        trophy.addAll(
+            Position{p, 0},
+            Drawable{TROPHY, BLOCK_TEX_SCALE, true, false},
+            Trophy{}
+        );
+        b2Body_SetUserData(trophyBody, new ent_type{trophy.entity()});
 
     }
 }

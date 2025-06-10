@@ -89,11 +89,6 @@ namespace dave_game {
     struct Background { };
 
 
-/// @brief Health of an entity. When it reaches 0, entity is dead.
-    struct Health {
-        int hp = STARTING_LIVES;
-    };
-
 /// @brief Indicates that the entity has a gun and can shoot.
     struct Gun {};
 
@@ -110,12 +105,11 @@ namespace dave_game {
         bool open = false;
     };
 
-    struct Diamond {};
-
-/// @brief Score value of a collectible entity.
-    struct PrizeValue {
-        int score = -1; ///< Actual score value must be set during entity creation
+/// @brief Represents a  Diamond Prize  and score value of the collectible entity.
+    struct Diamond {
+        int value = 100;
     };
+
 
 /// @brief Marks the entity as deadly to the player (e.g., fire, water, monsters).
     struct Hazard {};
@@ -136,7 +130,9 @@ namespace dave_game {
     };
 
 /// @brief Marks if the entity is a trophy
-    struct Trophy {};
+    struct Trophy {
+        int value = 1000;
+    };
 
     struct DoorLabel{};
 
@@ -147,6 +143,9 @@ namespace dave_game {
         void prepareBoxWorld();
 
         void MovementSystem();
+
+        void renderGoThruTheDoor();
+
         void CollisionSystem();
         void RenderSystem();
         void InputSystem();
@@ -164,6 +163,7 @@ namespace dave_game {
         void createStatusBar();
         void createTitles();
         void createScoreBar();
+        void createTrophy(SDL_FPoint p);
 
         void createDave();
 
@@ -213,11 +213,13 @@ namespace dave_game {
         static constexpr int WIN_HEIGHT = (MAP_HEIGHT + STATUS_BAR_HEIGHT) * RED_BLOCK.h * DAVE_TEX_SCALE;
         static constexpr SDL_FRect DIAMOND{ 14, 429, 10, 11 };
         static constexpr SDL_FRect DOOR{ 13, 234, 10, 11 };
+        static constexpr SDL_FRect TROPHY{ 38, 247, 10, 10 };
 
         static constexpr uint8_t GRID_BACKGROUND = 0;
         static constexpr uint8_t GRID_RED_BLOCK = 1;
         static constexpr uint8_t GRID_DIAMOND = 2;
         static constexpr uint8_t GRID_DOOR = 3;
+        static constexpr uint8_t GRID_TROPHY = 4;
 
         static constexpr int SCORE_DIGITS_COUNT = 5;
 
@@ -245,7 +247,7 @@ namespace dave_game {
     /* row 2 */
     { GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND, GRID_BACKGROUND,
       GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND, GRID_BACKGROUND, GRID_BACKGROUND,
-      GRID_BACKGROUND, GRID_DIAMOND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_TROPHY, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
       GRID_DIAMOND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK },
 
     /* row 3 */

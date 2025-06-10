@@ -165,6 +165,8 @@ namespace dave_game {
         void createScoreBar();
         void createTrophy(SDL_FPoint p);
 
+        void EndGame();
+
         void createDave();
 
         static constexpr float	BOX_SCALE = 64.f;
@@ -283,7 +285,7 @@ namespace dave_game {
     /* row 8 */
     { GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
       GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
-      GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK, GRID_DOOR, GRID_BACKGROUND,
+      GRID_BACKGROUND, GRID_DOOR, GRID_RED_BLOCK, GRID_DOOR, GRID_BACKGROUND,
       GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK },
 
     /* row 9 (bottom border) */

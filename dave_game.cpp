@@ -209,18 +209,26 @@ namespace dave_game
     }
 
     void DaveGame::renderGoThruTheDoor() {
-        cout << "Rendering go through the door" << endl;
-        static const Mask mask = MaskBuilder()
+        static const Mask labelMask = MaskBuilder()
                    .set<DoorLabel>()
                    .build();
 
         for (ent_type e{0}; e.id <= World::maxId().id; ++e.id) {
-            if (World::mask(e).test(mask)) {
+            if (World::mask(e).test(labelMask)) {
                 auto& d = World::getComponent<Drawable>(e);
                 d.visible = true;
             }
         }
+        static const Mask doorMask = MaskBuilder()
+           .set<Door>()
+           .build();
 
+        for (ent_type e{0}; e.id <= World::maxId().id; ++e.id) {
+            if (World::mask(e).test(doorMask)) {
+                auto& d = World::getComponent<Door>(e);
+                d.open=true;
+            }
+        }
     }
 
     void DaveGame::CollisionSystem()
@@ -254,7 +262,7 @@ namespace dave_game
             else if (sensorIsDave && visitorIsDoor) {
                 auto& door = World::getComponent<Door>(*visitorEntity);
                 if (door.open) {
-
+                    EndGame();
                 }
             }
             else if (sensorIsDave && visitorIsTrophy) {
@@ -614,6 +622,18 @@ namespace dave_game
             Trophy{}
         );
         b2Body_SetUserData(trophyBody, new ent_type{trophy.entity()});
-
+    }
+    void DaveGame::EndGame() {
+        Mask required = MaskBuilder()
+            .set<Collider>()
+            .build();
+        for (id_type id = 0; id <= World::maxId().id; ++id) {
+            ent_type e{id};
+            if (World::mask(e).test(required)) {
+                auto& c = World::getComponent<Collider>(e);
+                b2DestroyBody(c.b);
+            }
+            World::destroyEntity(e);
+        }
     }
 }

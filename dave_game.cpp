@@ -256,7 +256,7 @@ namespace dave_game
                 groundStatus.onGround = true;
             }
             else if (sensorIsDave && visitorIsDiamond) {
-                auto& diamond = World::getComponent<Diamond>(*sensorEntity);
+                auto& diamond = World::getComponent<Diamond>(*visitorEntity);
                 gameInfo.score +=  diamond.value;
                 World::destroyEntity(*visitorEntity);
                 b2DestroyBody(visitor);
@@ -303,22 +303,31 @@ namespace dave_game
 
     void DaveGame::StatusBarSystem() {
         int score = gameInfo.score;
+        int digit = 0;
 
-        for (int i = SCORE_DIGITS_COUNT - 1; i >= 0; --i) {
-            int digit = score % 10;
-            score /= 10;
+        static const Mask score_mask = MaskBuilder()
+            .set<ScoreLabel>()
+            .set<Drawable>()
+            .build();
 
-            if (i < SCORE_DIGITS_COUNT) {
-                ent_type e = scoreEntities[i];
-                if (World::mask(e).test(Component<Drawable>::Bit)) {
-                    auto& drawable = World::getComponent<Drawable>(e);
-                    drawable.part = NUMBERS_SPRITES[digit].part;
-                }
+        static const Mask level_mask = MaskBuilder()
+            .set<LevelLabel>()
+            .set<Drawable>()
+            .build();
+
+        for (id_type i =0; i<World::maxId().id; ++i) {
+            ent_type e{i};
+            if (World::mask(e).test(score_mask)) {
+                digit = score % 10;
+                score /= 10;
+                auto& drawable = World::getComponent<Drawable>(e);
+                drawable.part = NUMBERS_SPRITES[digit].part;
+            }
+            else if (World::mask(e).test(level_mask)) {
+                auto& drawable = World::getComponent<Drawable>(e);
+                drawable.part = NUMBERS_SPRITES[gameInfo.level].part;
             }
         }
-
-        auto& levelDrawable = World::getComponent<Drawable>(levelEntity);
-        levelDrawable.part = NUMBERS_SPRITES[gameInfo.level].part;
     }
 
 
@@ -537,7 +546,6 @@ namespace dave_game
 
         b2ShapeDef diamondShapeDef = b2DefaultShapeDef();
         diamondShapeDef.enableSensorEvents = true;
-        //diamondShapeDef.isSensor = true;
 
         b2Polygon diamondBox = b2MakeBox((DIAMOND.w*BLOCK_TEX_SCALE/BOX_SCALE)/2, (DIAMOND.h*BLOCK_TEX_SCALE/BOX_SCALE)/2);
         b2CreatePolygonShape(diamondBody, &diamondShapeDef, &diamondBox);
@@ -613,14 +621,13 @@ namespace dave_game
 
     void DaveGame::createScoreBar() {
 
-        for (int i=0; i < SCORE_DIGITS_COUNT; ++i) {
+        for (int i=SCORE_DIGITS_COUNT - 1; i >= 0; --i) {
             auto entity = Entity::create();
             entity.addAll(
                 Position{{(i+1) * 40.f + 210, 10}, 0},
-                Drawable{NUMBERS_SPRITES[i+5]}
+                Drawable{NUMBERS_SPRITES[i+5]},
+                ScoreLabel{}
             );
-
-            scoreEntities[i] = entity.entity();
         }
 
     }
@@ -629,9 +636,9 @@ namespace dave_game
         Entity level = Entity::create();
         level.addAll(
             Position{{700, 10}, 0},
-            Drawable{NUMBERS_SPRITES[0]}
+            Drawable{NUMBERS_SPRITES[0]},
+            LevelLabel{}
         );
-        levelEntity = level.entity();
 
         Entity health1 = Entity::create();
         health1.addAll(

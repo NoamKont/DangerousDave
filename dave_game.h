@@ -138,6 +138,9 @@ namespace dave_game {
 
     struct DoorLabel{};
 
+    struct ScoreLabel{};
+    struct LevelLabel{};
+
 
 
     class DaveGame {
@@ -236,8 +239,6 @@ namespace dave_game {
         SDL_Texture* tex;
         SDL_Renderer* ren;
         SDL_Window* win;
-        ent_type scoreEntities[SCORE_DIGITS_COUNT];
-        ent_type levelEntity;
         GameInfo gameInfo;
 
         b2WorldId boxWorld = b2_nullWorldId;

@@ -437,6 +437,7 @@ namespace dave_game
         b2BodyDef daveBodyDef = b2DefaultBodyDef();
         daveBodyDef.type = b2_dynamicBody;
         daveBodyDef.position = {p.x / BOX_SCALE, p.y / BOX_SCALE};
+        daveBodyDef.fixedRotation = true;
         b2BodyId daveBody = b2CreateBody(boxWorld, &daveBodyDef);
 
         //Define shape

@@ -249,10 +249,11 @@ namespace dave_game
             bool visitorIsDiamond = World::mask(*visitorEntity).test(Component<Diamond>::Bit);
             bool visitorIsDoor = World::mask(*visitorEntity).test(Component<Door>::Bit);
             bool visitorIsTrophy = World::mask(*visitorEntity).test(Component<Trophy>::Bit);
+            bool visitorIsMoveScreen = World::mask(*visitorEntity).test(Component<MoveScreenSensor>::Bit);
 
             if(sensorIsDave && visitorIsWall)
             {
-                auto& groundStatus = World::getComponent<GroundStatus>(*sensorEntity);
+                auto& groundStatus = World::getComponent<GroundStatus>(*visitorEntity);
                 groundStatus.onGround = true;
             }
             else if (sensorIsDave && visitorIsDiamond) {
@@ -269,11 +270,21 @@ namespace dave_game
             }
             else if (sensorIsDave && visitorIsTrophy) {
                 //auto& gameInfo = World::getComponent<GameInfo>(*sensorEntity);
-                auto& trophy = World::getComponent<Trophy>(*sensorEntity);
+                auto& trophy = World::getComponent<Trophy>(*visitorEntity);
                 gameInfo.score += trophy.value; // Increase score by 100 for collecting a trophy
                 World::destroyEntity(*visitorEntity);
                 b2DestroyBody(visitor);
                 renderGoThruTheDoor();
+            }
+            else if (sensorIsDave && visitorIsMoveScreen) {
+                auto& moveScreen = World::getComponent<MoveScreenSensor>(*visitorEntity);
+                int screen = gameInfo.screenOffset / 0.5f;
+                if (moveScreen.forward &&  moveScreen.col == screen) {
+                    gameInfo.screenOffset += .5f; // Move screen forward
+                } else if (!moveScreen.forward && moveScreen.col == screen - 1) {
+                    gameInfo.screenOffset -= .5f; // Move screen backward
+                }
+
             }
         }
     }
@@ -341,7 +352,7 @@ namespace dave_game
 
         SDL_RenderClear(ren);
 
-        SDL_SetRenderDrawColor(ren,0,255,0,0);
+        //SDL_SetRenderDrawColor(ren,0,255,0,0);
 
         for (int i = 0; i <= World::maxId().id; ++i)
         {
@@ -418,7 +429,10 @@ namespace dave_game
     /// @brief Creates the player entity (Dave) with default attributes.
     void DaveGame::createDave()
     {
-        SDL_FPoint p = {WIN_WIDTH/2, WIN_HEIGHT/2};//TODO start position
+        SDL_FPoint p = {
+            DAVE_START_COLUMN * RED_BLOCK.w * BLOCK_TEX_SCALE,
+            DAVE_START_ROW * RED_BLOCK.h * BLOCK_TEX_SCALE
+        };
 
         b2BodyDef daveBodyDef = b2DefaultBodyDef();
         daveBodyDef.type = b2_dynamicBody;
@@ -530,9 +544,16 @@ namespace dave_game
                     SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
                     createTrophy(p);
                 }
+                else if (map_row[col] == DaveGame::GRID_SENSOR_BACK) {
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
+                    createMoveScreenSensor(p, false, col/20);
+                }
+                else if (map_row[col] == DaveGame::GRID_SENSOR_FORWARD) {
+                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
+                    createMoveScreenSensor(p, true, col/20);
+                }
             }
         }
-
     }
 
     void DaveGame::createDiamond(SDL_FPoint p) {
@@ -659,8 +680,32 @@ namespace dave_game
 
 
     }
-    void DaveGame::createTrophy(SDL_FPoint p) {
 
+    void DaveGame::createMoveScreenSensor(SDL_FPoint p,bool forward, int col) {
+
+        b2BodyDef sensorBodyDef = b2DefaultBodyDef();
+        sensorBodyDef.type = b2_staticBody;
+        sensorBodyDef.position = {p.x / BOX_SCALE, p.y / BOX_SCALE};
+        b2BodyId sensorBody = b2CreateBody(boxWorld, &sensorBodyDef);
+
+        b2ShapeDef sensorShapeDef = b2DefaultShapeDef();
+        sensorShapeDef.enableSensorEvents = true;
+        sensorShapeDef.isSensor = true;
+
+        b2Polygon sensorBox = b2MakeBox((TROPHY.w*BLOCK_TEX_SCALE/BOX_SCALE)/2, (TROPHY.h*BLOCK_TEX_SCALE/BOX_SCALE)/2);
+        b2CreatePolygonShape(sensorBody, &sensorShapeDef, &sensorBox);
+
+
+        Entity ent = Entity::create();
+        ent.addAll(
+            Position{p, 0},
+            MoveScreenSensor{forward, col}
+        );
+        b2Body_SetUserData(sensorBody, new ent_type{ent.entity()});
+
+    }
+
+    void DaveGame::createTrophy(SDL_FPoint p) {
 
         b2BodyDef trophyBodyDef = b2DefaultBodyDef();
         trophyBodyDef.type = b2_staticBody;

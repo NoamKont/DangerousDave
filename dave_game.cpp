@@ -52,7 +52,6 @@ namespace dave_game
         prepareBoxWorld();
         createMap(&map_stage2[0][0], MAP_WIDTH * 2, MAP_HEIGHT);
 
-
         createDave();
         //createStatusBar();
 
@@ -300,10 +299,24 @@ namespace dave_game
         for (ent_type e{0}; e.id <= World::maxId().id; ++e.id) {
             if (World::mask(e).test(mask)) {
                 b2Transform t = b2Body_GetTransform(World::getComponent<Collider>(e).b);
+
+                auto & c = World::getComponent<Collider>(e);
+                b2BodyId body = c.b;
+                // Get Box2D center position (in meters)
+                b2Vec2 pos = b2Body_GetPosition(body);
+
+                // Convert to pixels
+                float centerX = pos.x * BOX_SCALE;
+                float centerY = pos.y * BOX_SCALE;
                 World::getComponent<Position>(e) = {
-                    {t.p.x*BOX_SCALE, t.p.y*BOX_SCALE},
+                    {centerX, centerY},
                     RAD_TO_DEG * b2Rot_GetAngle(t.q)
                 };
+
+                // World::getComponent<Position>(e) = {
+                //     {t.p.x*BOX_SCALE, t.p.y*BOX_SCALE},
+                //     RAD_TO_DEG * b2Rot_GetAngle(t.q)
+                // };
             }
         }
     }
@@ -356,9 +369,10 @@ namespace dave_game
                 continue;
             }
 
-            if (World::mask(e).test(Component<Dave>::Bit))
+            if (World::mask(e).test(Component<Dave>::Bit) || World::mask(e).test(Component<Wall>::Bit))
             {
                 const Collider& collider = World::getComponent<Collider>(e);
+                //const auto& pos = World::getComponent<Position>(e);
 
                     b2BodyId body = collider.b;
 
@@ -368,24 +382,26 @@ namespace dave_game
                     // Convert to pixels
                     float centerX = pos.x * BOX_SCALE;
                     float centerY = pos.y * BOX_SCALE;
+                    float w,h;
+                    if ( World::mask(e).test(Component<Wall>::Bit)) {
 
-                    float w = DAVE_JUMPING.w * DAVE_TEX_SCALE; // back to pixels
-                    float h = DAVE_JUMPING.h * DAVE_TEX_SCALE;
+                        w = RED_BLOCK.w * BLOCK_TEX_SCALE; // back to pixels
+                        h = RED_BLOCK.h * BLOCK_TEX_SCALE;
+                    }else {
+                        w = DAVE_JUMPING.w * DAVE_TEX_SCALE; // back to pixels
+                        h = DAVE_JUMPING.h * DAVE_TEX_SCALE;
+                    }
 
                     // Top-left corner
                     SDL_FRect boxRect = {
-                        centerX,
-                        centerY,
+                        centerX - w/2 ,
+                        centerY - h/2,
                         w,
                         h
                     };
-                std::cout << "Box: x=" << boxRect.x << ", y=" << boxRect.y
-                          << ", w=" << boxRect.w << ", h=" << boxRect.h << '\n';
                 SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
                 SDL_RenderRect(ren, &boxRect);
-
-
-                cout<< "Rendering Dave at: " << centerX << ", " << centerY << endl;
+                SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
             }
 
             const auto& pos = World::getComponent<Position>(e);
@@ -529,7 +545,7 @@ namespace dave_game
 
     Entity e = Entity::create();
     e.addAll(
-        Position{center, 0},  // Render from top-left (SDL world)
+        Position{center, 0},
         Drawable{DAVE_STANDING, DAVE_TEX_SCALE, true, false},
         Collider{daveBody},
         Intent{},
@@ -690,6 +706,7 @@ namespace dave_game
         );
         b2Body_SetUserData(doorBody, new ent_type{door.entity()});
     }
+
 
     void DaveGame::createMoveScreenSensor(SDL_FPoint p, bool forward, int col) {
 

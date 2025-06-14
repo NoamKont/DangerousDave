@@ -170,6 +170,7 @@ namespace dave_game {
         void createMap(uint8_t* map, int width, int height);
         void createDiamond(SDL_FPoint p);
         void createDoor(SDL_FPoint p);
+
         void createStatusBar();
         void createTitles();
         void createScoreBar();

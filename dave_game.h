@@ -166,7 +166,7 @@ namespace dave_game {
         void box_system();
 
         void prepareWalls() const;
-        void createWall(SDL_FPoint p, float w, float h) const;
+        void createWall(SDL_FPoint p) const;
         void createMap(uint8_t* map, int width, int height);
         void createDiamond(SDL_FPoint p);
         void createDoor(SDL_FPoint p);
@@ -182,9 +182,6 @@ namespace dave_game {
 
         void createDave();
 
-        static constexpr float	BOX_SCALE = 64.f;
-        static constexpr float	DAVE_TEX_SCALE = 0.4f;
-        static constexpr float	BLOCK_TEX_SCALE = 0.66f;
 
         // static constexpr SDL_FRect RED_BLOCK {86,380,11,11};
         // static constexpr SDL_FRect DAVE_HEALTH{ 1, 213, 8, 9 };
@@ -209,6 +206,11 @@ namespace dave_game {
         // static constexpr SDL_FRect SCORE_8{ 282, 214, 6, 7 };
         // static constexpr SDL_FRect SCORE_9{ 288, 214, 6, 7 };
 
+        //static constexpr float	BOX_SCALE = 64.f;
+        static constexpr float	BOX_SCALE = 35.5f;
+        static constexpr float	DAVE_TEX_SCALE = 0.42f;
+        static constexpr float	BLOCK_TEX_SCALE = 0.56f;
+
 
         static constexpr SDL_FRect DAVE_HEALTH{ 1419, 804, 79, 75 };
         static constexpr SDL_FRect SCORE_SPRITE{1082, 694, 280, 71};
@@ -226,7 +228,8 @@ namespace dave_game {
         static constexpr SDL_FRect RED_DIAMOND{ 75, 370, 118, 118 };
         static constexpr SDL_FRect DOOR{ 525, 366, 118, 118 };
         static constexpr SDL_FRect TROPHY{ 373, 370, 118, 118 };
-        static constexpr SDL_FRect RED_BLOCK{ 229, 226, 100, 100 };
+        static constexpr SDL_FRect RED_BLOCK{ 221, 218, 118, 118 };
+        //static constexpr SDL_FRect RED_BLOCK{ 230, 226, 100, 100 };
 
         static constexpr SDL_FRect SCORE_1{ 1671, 738, 40, 73 };
         static constexpr SDL_FRect SCORE_2{ 1740, 738, 60, 70 };
@@ -270,13 +273,12 @@ namespace dave_game {
 
 
         static constexpr int DAVE_START_COLUMN = 1;
-        static constexpr int DAVE_START_ROW = 8;
+        static constexpr int DAVE_START_ROW = 9;
 
 
         static constexpr int STATUS_BAR_HEIGHT = 2;
         static constexpr int WIN_WIDTH = MAP_WIDTH * (RED_BLOCK.w * BLOCK_TEX_SCALE);
-        static constexpr int WIN_HEIGHT = MAP_HEIGHT * (RED_BLOCK.h * BLOCK_TEX_SCALE);
-        //static constexpr int WIN_HEIGHT = (MAP_HEIGHT + STATUS_BAR_HEIGHT) * (RED_BLOCK.h * BLOCK_TEX_SCALE);
+        static constexpr int WIN_HEIGHT = (MAP_HEIGHT + STATUS_BAR_HEIGHT) * (RED_BLOCK.h * BLOCK_TEX_SCALE);
 
         static constexpr uint8_t GRID_BACKGROUND = 0;
         static constexpr uint8_t GRID_RED_BLOCK = 1;

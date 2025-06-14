@@ -183,10 +183,63 @@ namespace dave_game {
         void createDave();
 
         static constexpr float	BOX_SCALE = 64.f;
-        static constexpr float	DAVE_TEX_SCALE = 4.f;
-        static constexpr float	BLOCK_TEX_SCALE = 6.f;
+        static constexpr float	DAVE_TEX_SCALE = 0.4f;
+        static constexpr float	BLOCK_TEX_SCALE = 0.66f;
 
-        static constexpr SDL_FRect RED_BLOCK {86,380,11,11};
+        // static constexpr SDL_FRect RED_BLOCK {86,380,11,11};
+        // static constexpr SDL_FRect DAVE_HEALTH{ 1, 213, 8, 9 };
+        // static constexpr SDL_FRect SCORE_SPRITE{192, 214, 39, 7};
+        // static constexpr SDL_FRect LEVEL_SPRITE{146, 214, 33, 7};
+        // static constexpr SDL_FRect HEALTH_SPRITE{102, 214, 37, 7};
+
+        // static constexpr SDL_FRect DAVE_STANDING{ 5, 13, 8, 16 };
+        // static constexpr SDL_FRect DAVE_WALKING_1{27,13,12,16};
+        // static constexpr SDL_FRect DAVE_WALKING_2{78,13,12,16};
+        // static constexpr SDL_FRect DAVE_IDLE{ 155, 13, 7, 16 };
+        // static constexpr SDL_FRect DAVE_JUMPING{127,13,13,14};
+        //
+        // static constexpr SDL_FRect SCORE_0{ 294, 214, 6, 7 };
+        // static constexpr SDL_FRect SCORE_1{ 237, 214, 6, 7 };
+        // static constexpr SDL_FRect SCORE_2{ 243, 214, 6, 7 };
+        // static constexpr SDL_FRect SCORE_3{ 250, 214, 6, 7 };
+        // static constexpr SDL_FRect SCORE_4{ 256, 214, 6, 7 };
+        // static constexpr SDL_FRect SCORE_5{ 262, 214, 6, 7 };
+        // static constexpr SDL_FRect SCORE_6{ 269, 214, 6, 7 };
+        // static constexpr SDL_FRect SCORE_7{ 275, 214, 6, 7 };
+        // static constexpr SDL_FRect SCORE_8{ 282, 214, 6, 7 };
+        // static constexpr SDL_FRect SCORE_9{ 288, 214, 6, 7 };
+
+
+        static constexpr SDL_FRect DAVE_HEALTH{ 1419, 804, 79, 75 };
+        static constexpr SDL_FRect SCORE_SPRITE{1082, 694, 280, 71};
+        static constexpr SDL_FRect HEALTH_SPRITE{1082, 804, 273, 70};
+        static constexpr SDL_FRect LEVEL_SPRITE{1082, 912, 287, 70};
+
+
+        static constexpr SDL_FRect DAVE_STANDING{ 75, 38, 109, 155 };
+        static constexpr SDL_FRect DAVE_WALKING_1{223,38,117,155};
+        static constexpr SDL_FRect DAVE_WALKING_2{373,38,117,155};
+        static constexpr SDL_FRect DAVE_IDLE{ 75, 38, 109, 155 };
+        static constexpr SDL_FRect DAVE_JUMPING{676,38,131,155};
+
+        static constexpr SDL_FRect DIAMOND{ 231, 370, 118, 118 };
+        static constexpr SDL_FRect RED_DIAMOND{ 75, 370, 118, 118 };
+        static constexpr SDL_FRect DOOR{ 525, 366, 118, 118 };
+        static constexpr SDL_FRect TROPHY{ 373, 370, 118, 118 };
+        static constexpr SDL_FRect RED_BLOCK{ 229, 226, 100, 100 };
+
+        static constexpr SDL_FRect SCORE_1{ 1671, 738, 40, 73 };
+        static constexpr SDL_FRect SCORE_2{ 1740, 738, 60, 70 };
+        static constexpr SDL_FRect SCORE_3{ 1808, 738, 60, 71 };
+        static constexpr SDL_FRect SCORE_4{ 1886, 738, 64, 70 };
+        static constexpr SDL_FRect SCORE_5{ 1967, 738, 55, 70 };
+
+        static constexpr SDL_FRect SCORE_6{ 1671, 842, 56, 68 };
+        static constexpr SDL_FRect SCORE_7{ 1740, 842, 61, 68 };
+        static constexpr SDL_FRect SCORE_8{ 1814, 842, 60, 68 };
+        static constexpr SDL_FRect SCORE_9{ 1887, 842, 59, 68 };
+        static constexpr SDL_FRect SCORE_0{ 1961, 842, 60, 68 };
+
 
         static constexpr int MAP_WIDTH = 20;
         static constexpr int MAP_HEIGHT = 10;
@@ -202,38 +255,28 @@ namespace dave_game {
 
         static inline  Drawable** DAVE_ANIMATION = nullptr;
         static inline Drawable* NUMBERS_SPRITES = new Drawable[10] {
-            { { 294, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 0
-            { { 237, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 1
-            { { 243, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 2
-            { { 250, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 3
-            { { 256, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 4
-            { { 262, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 5
-            { { 269, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 6
-            { { 275, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 7
-            { { 282, 214, 6, 7 }, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 8
-            { { 288, 214, 6, 7 }, BLOCK_TEX_SCALE ,true ,false , true}  // Placeholder for index 9
+            { SCORE_0, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 0
+            { SCORE_1, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 1
+            { SCORE_2, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 2
+            { SCORE_3, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 3
+            { SCORE_4, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 4
+            { SCORE_5, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 5
+            { SCORE_6, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 6
+            { SCORE_7, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 7
+            { SCORE_8, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 8
+            { SCORE_9, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 9
         };
 
-        static constexpr SDL_FRect DAVE_HEALTH{ 1, 213, 8, 9 };
-        static constexpr SDL_FRect SCORE_SPRITE{192, 214, 39, 7};
-        static constexpr SDL_FRect LEVEL_SPRITE{146, 214, 33, 7};
-        static constexpr SDL_FRect HEALTH_SPRITE{102, 214, 37, 7};
+
 
         static constexpr int DAVE_START_COLUMN = 1;
         static constexpr int DAVE_START_ROW = 8;
 
-        static constexpr SDL_FRect DAVE_STANDING{ 5, 13, 8, 16 };
-        static constexpr SDL_FRect DAVE_WALKING_1{27,13,12,16};
-        static constexpr SDL_FRect DAVE_WALKING_2{78,13,12,16};
-        static constexpr SDL_FRect DAVE_IDLE{ 155, 13, 7, 16 };
-        static constexpr SDL_FRect DAVE_JUMPING{127,13,13,14};
 
         static constexpr int STATUS_BAR_HEIGHT = 2;
-        static constexpr int WIN_WIDTH = MAP_WIDTH * RED_BLOCK.w * BLOCK_TEX_SCALE;
-        static constexpr int WIN_HEIGHT = (MAP_HEIGHT + STATUS_BAR_HEIGHT) * RED_BLOCK.h * BLOCK_TEX_SCALE;
-        static constexpr SDL_FRect DIAMOND{ 14, 429, 10, 11 };
-        static constexpr SDL_FRect DOOR{ 13, 234, 10, 11 };
-        static constexpr SDL_FRect TROPHY{ 38, 247, 10, 10 };
+        static constexpr int WIN_WIDTH = MAP_WIDTH * (RED_BLOCK.w * BLOCK_TEX_SCALE);
+        static constexpr int WIN_HEIGHT = MAP_HEIGHT * (RED_BLOCK.h * BLOCK_TEX_SCALE);
+        //static constexpr int WIN_HEIGHT = (MAP_HEIGHT + STATUS_BAR_HEIGHT) * (RED_BLOCK.h * BLOCK_TEX_SCALE);
 
         static constexpr uint8_t GRID_BACKGROUND = 0;
         static constexpr uint8_t GRID_RED_BLOCK = 1;

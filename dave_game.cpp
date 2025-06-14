@@ -54,7 +54,7 @@ namespace dave_game
 
 
         createDave();
-        createStatusBar();
+        //createStatusBar();
 
     }
 
@@ -86,7 +86,7 @@ namespace dave_game
             cout << SDL_GetError() << endl;
             return false;
             }
-        SDL_Surface *surf = IMG_Load("res/Dave1.png");
+        SDL_Surface *surf = IMG_Load("res/DangerousNiv.png");
         if (surf == nullptr) {
             cout << SDL_GetError() << endl;
             return false;
@@ -154,11 +154,9 @@ namespace dave_game
                 const auto& c = World::getComponent<Collider>(e);
                 bool isDave = World::mask(e).test(Component<Dave>::Bit);
 
-                float JUMP_IMPULSE = 230.5f;
-
                 const auto& vel = b2Body_GetLinearVelocity(c.b);
 
-                const float x = i.left ? -3 : i.right ? 3 : 0;
+                const float x = i.left ? -3.f : i.right ? 3.f : 0.f;
                 b2Body_SetLinearVelocity(c.b, {x,vel.y});
 
 
@@ -174,8 +172,6 @@ namespace dave_game
                         float mass = b2Body_GetMass(c.b);
                         b2Vec2 impulse = {0.0f, -mass * jumpVelocity};
                         b2Body_ApplyLinearImpulseToCenter(c.b, impulse, true);
-
-                        //b2Body_SetLinearVelocity(c.b,{0, -15});
                     }
 
                     if (vel.x >= -ANIMATION_VELOCITY_THRESHOLD && vel.x <= ANIMATION_VELOCITY_THRESHOLD && vel.y >= -ANIMATION_VELOCITY_THRESHOLD && vel.y <= ANIMATION_VELOCITY_THRESHOLD) {
@@ -371,7 +367,7 @@ namespace dave_game
             }
 
             const SDL_FRect dst = {
-                pos.p.x - drawable.part.w / 2 - gameInfo.screenOffset * (!drawable.isStatic) * WIN_WIDTH + BLOCK_TEX_SCALE,
+                pos.p.x - drawable.part.w / 2 - (gameInfo.screenOffset * (!drawable.isStatic) * WIN_WIDTH + BLOCK_TEX_SCALE),
                     pos.p.y - drawable.part.h / 2,
                     drawable.part.w * drawable.scale,
                     drawable.part.h * drawable.scale
@@ -427,132 +423,262 @@ namespace dave_game
     }
 
     /// @brief Creates the player entity (Dave) with default attributes.
+    // void DaveGame::createDave()
+    // {
+    //     // Calculate top-left corner of Dave's starting cell in pixels
+    //     SDL_FPoint topLeft = {
+    //         DAVE_START_COLUMN * RED_BLOCK.w * BLOCK_TEX_SCALE,
+    //         DAVE_START_ROW * RED_BLOCK.h * BLOCK_TEX_SCALE
+    //     };
+    //
+    //     // Dave's size in pixels (scaled)
+    //     float width = DAVE_JUMPING.w * DAVE_TEX_SCALE;
+    //     float height = DAVE_JUMPING.h * DAVE_TEX_SCALE;
+    //
+    //     // Calculate Dave's center position for Box2D
+    //     SDL_FPoint center = {
+    //         topLeft.x + width / 2.0f,
+    //         topLeft.y + height / 2.0f
+    //     };
+    //
+    //     b2BodyDef daveBodyDef = b2DefaultBodyDef();
+    //     daveBodyDef.type = b2_dynamicBody;
+    //     daveBodyDef.position = {center.x / BOX_SCALE, center.y / BOX_SCALE};
+    //     daveBodyDef.fixedRotation = true;
+    //     b2BodyId daveBody = b2CreateBody(boxWorld, &daveBodyDef);
+    //
+    //     //Define shape
+    //     b2ShapeDef daveShapeDef = b2DefaultShapeDef();
+    //     daveShapeDef.density = 28.9;
+    //     daveShapeDef.enableSensorEvents = false;
+    //     daveShapeDef.isSensor = false;
+    //
+    //     b2Polygon daveBox = b2MakeBox((DAVE_JUMPING.w*DAVE_TEX_SCALE/BOX_SCALE)/2, (DAVE_JUMPING.h*DAVE_TEX_SCALE/BOX_SCALE)/2);
+    //     b2CreatePolygonShape(daveBody, &daveShapeDef, &daveBox);
+    //
+    //     b2ShapeDef daveShapeDef2 = b2DefaultShapeDef();
+    //     daveShapeDef2.enableSensorEvents = true;
+    //     daveShapeDef2.isSensor = true;
+    //     b2Polygon daveBox2 = b2MakeBox((DAVE_JUMPING.w*DAVE_TEX_SCALE/BOX_SCALE)/2, (DAVE_JUMPING.h*DAVE_TEX_SCALE/BOX_SCALE)/2);
+    //     b2CreatePolygonShape(daveBody, &daveShapeDef2, &daveBox2);
+    //
+    //
+    //
+    //     DAVE_ANIMATION = new Drawable*[3] {
+    //         new Drawable[4] { //IDLE
+    //             {DAVE_IDLE, DAVE_TEX_SCALE, true, false},
+    //             {DAVE_IDLE, DAVE_TEX_SCALE, true, false},
+    //                 {DAVE_IDLE, DAVE_TEX_SCALE, true, false},
+    //             {DAVE_IDLE, DAVE_TEX_SCALE, true, false}
+    //         },
+    //         new Drawable[4] { //Walking
+    //             {DAVE_STANDING, DAVE_TEX_SCALE, true, false},
+    //             {DAVE_WALKING_1, DAVE_TEX_SCALE, true, false},
+    //                 {DAVE_STANDING, DAVE_TEX_SCALE, true, false},
+    //             {DAVE_WALKING_2, DAVE_TEX_SCALE, true, false}
+    //         },
+    //         new Drawable[4] { //JUMP
+    //             {DAVE_JUMPING, DAVE_TEX_SCALE, true, false},
+    //             {DAVE_JUMPING, DAVE_TEX_SCALE, true, false},
+    //                 {DAVE_JUMPING, DAVE_TEX_SCALE, true, false},
+    //             {DAVE_JUMPING, DAVE_TEX_SCALE, true, false}
+    //         }
+    //     };
+    //
+    //     std:: cout << "Creating Dave entity " << std::endl;
+    //
+    //     Entity e = Entity::create();
+    //     e.addAll(
+    //      Position{{},0},
+    //      Drawable{DAVE_STANDING, DAVE_TEX_SCALE, true, false},
+    //      Collider{daveBody},
+    //      Intent{},
+    //      Animation{DAVE_ANIMATION, 1, 4, 0, 0, Animation::Type::DAVE}, // 1 state, 4 frames, current state 0, current frame 0
+    //      Input{SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_RIGHT, SDL_SCANCODE_LEFT},
+    //      Dave{},
+    //      GroundStatus{true}
+    //      );
+    //
+    //     b2Body_SetUserData(daveBody, new ent_type{e.entity()});
+    //
+    //     std::cout << "Dave entity created with ID: " << e.entity().id << std::endl;
+    // }
     void DaveGame::createDave()
-    {
-        SDL_FPoint p = {
-            DAVE_START_COLUMN * RED_BLOCK.w * BLOCK_TEX_SCALE,
-            DAVE_START_ROW * RED_BLOCK.h * BLOCK_TEX_SCALE
-        };
+{
+    // Calculate top-left corner of Dave's starting cell in pixels
+    SDL_FPoint topLeft = {
+        DAVE_START_COLUMN * RED_BLOCK.w * BLOCK_TEX_SCALE,
+        DAVE_START_ROW * RED_BLOCK.h * BLOCK_TEX_SCALE
+    };
 
-        b2BodyDef daveBodyDef = b2DefaultBodyDef();
-        daveBodyDef.type = b2_dynamicBody;
-        daveBodyDef.position = {p.x / BOX_SCALE, p.y / BOX_SCALE};
-        daveBodyDef.fixedRotation = true;
-        b2BodyId daveBody = b2CreateBody(boxWorld, &daveBodyDef);
+    // Dave's size in pixels (scaled)
+    float width = DAVE_JUMPING.w * DAVE_TEX_SCALE;
+    float height = DAVE_JUMPING.h * DAVE_TEX_SCALE;
 
-        //Define shape
-        b2ShapeDef daveShapeDef = b2DefaultShapeDef();
-        daveShapeDef.density = 28.9;
-        daveShapeDef.enableSensorEvents = false;
-        daveShapeDef.isSensor = false;
+    // Calculate Dave's center position for Box2D
+    SDL_FPoint center = {
+        topLeft.x + width / 2.0f,
+        topLeft.y + height / 2.0f
+    };
 
-        b2Polygon daveBox = b2MakeBox((DAVE_STANDING.w*DAVE_TEX_SCALE/BOX_SCALE)/2, (DAVE_STANDING.h*DAVE_TEX_SCALE/BOX_SCALE)/2);
-        b2CreatePolygonShape(daveBody, &daveShapeDef, &daveBox);
+    b2BodyDef daveBodyDef = b2DefaultBodyDef();
+    daveBodyDef.type = b2_dynamicBody;
+    daveBodyDef.position = {
+        center.x / BOX_SCALE,
+        center.y / BOX_SCALE
+    };
+    daveBodyDef.fixedRotation = true;
+    b2BodyId daveBody = b2CreateBody(boxWorld, &daveBodyDef);
 
-        b2ShapeDef daveShapeDef2 = b2DefaultShapeDef();
-        daveShapeDef2.enableSensorEvents = true;
-        daveShapeDef2.isSensor = true;
-        b2Polygon daveBox2 = b2MakeBox((DAVE_STANDING.w*DAVE_TEX_SCALE/BOX_SCALE)/2, (DAVE_STANDING.h*DAVE_TEX_SCALE/BOX_SCALE)/2);
-        b2CreatePolygonShape(daveBody, &daveShapeDef2, &daveBox2);
+    // Create physical box shape
+    float halfW = width / 2.0f / BOX_SCALE;
+    float halfH = height / 2.0f / BOX_SCALE;
 
+    b2ShapeDef daveShapeDef = b2DefaultShapeDef();
+    daveShapeDef.density = 28.9f;
+    daveShapeDef.enableSensorEvents = false;
+    daveShapeDef.isSensor = false;
 
+    b2Polygon daveBox = b2MakeBox(halfW, halfH);
+    b2CreatePolygonShape(daveBody, &daveShapeDef, &daveBox);
 
-        DAVE_ANIMATION = new Drawable*[3] {
-            new Drawable[4] { //IDLE
-                {DAVE_IDLE, DAVE_TEX_SCALE, true, false},
-                {DAVE_IDLE, DAVE_TEX_SCALE, true, false},
-                    {DAVE_IDLE, DAVE_TEX_SCALE, true, false},
-                {DAVE_IDLE, DAVE_TEX_SCALE, true, false}
-            },
-            new Drawable[4] { //Walking
-                {DAVE_STANDING, DAVE_TEX_SCALE, true, false},
-                {DAVE_WALKING_1, DAVE_TEX_SCALE, true, false},
-                    {DAVE_STANDING, DAVE_TEX_SCALE, true, false},
-                {DAVE_WALKING_2, DAVE_TEX_SCALE, true, false}
-            },
-            new Drawable[4] { //JUMP
-                {DAVE_JUMPING, DAVE_TEX_SCALE, true, false},
-                {DAVE_JUMPING, DAVE_TEX_SCALE, true, false},
-                    {DAVE_JUMPING, DAVE_TEX_SCALE, true, false},
-                {DAVE_JUMPING, DAVE_TEX_SCALE, true, false}
-            }
-        };
+    // Optional sensor shape (e.g., for ground detection)
+    b2ShapeDef daveShapeDef2 = b2DefaultShapeDef();
+    daveShapeDef2.enableSensorEvents = true;
+    daveShapeDef2.isSensor = true;
 
-        std:: cout << "Creating Dave entity " << std::endl;
+    b2Polygon daveBox2 = b2MakeBox(halfW, halfH);
+    b2CreatePolygonShape(daveBody, &daveShapeDef2, &daveBox2);
 
-        Entity e = Entity::create();
-        e.addAll(
-         Position{{},0},
-         Drawable{DAVE_STANDING, DAVE_TEX_SCALE, true, false},
-         Collider{daveBody},
-         Intent{},
-         Animation{DAVE_ANIMATION, 1, 4, 0, 0, Animation::Type::DAVE}, // 1 state, 4 frames, current state 0, current frame 0
-         Input{SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_RIGHT, SDL_SCANCODE_LEFT},
-         Dave{},
-         GroundStatus{true}
-         );
-        b2Body_SetUserData(daveBody, new ent_type{e.entity()});
+    // Set up animation frames
+    DAVE_ANIMATION = new Drawable*[3]{
+        new Drawable[4]{ // IDLE
+            {DAVE_IDLE, DAVE_TEX_SCALE, true, false},
+            {DAVE_IDLE, DAVE_TEX_SCALE, true, false},
+            {DAVE_IDLE, DAVE_TEX_SCALE, true, false},
+            {DAVE_IDLE, DAVE_TEX_SCALE, true, false}
+        },
+        new Drawable[4]{ // Walking
+            {DAVE_STANDING, DAVE_TEX_SCALE, true, false},
+            {DAVE_WALKING_1, DAVE_TEX_SCALE, true, false},
+            {DAVE_STANDING, DAVE_TEX_SCALE, true, false},
+            {DAVE_WALKING_2, DAVE_TEX_SCALE, true, false}
+        },
+        new Drawable[4]{ // Jump
+            {DAVE_JUMPING, DAVE_TEX_SCALE, true, false},
+            {DAVE_JUMPING, DAVE_TEX_SCALE, true, false},
+            {DAVE_JUMPING, DAVE_TEX_SCALE, true, false},
+            {DAVE_JUMPING, DAVE_TEX_SCALE, true, false}
+        }
+    };
 
-        std::cout << "Dave entity created with ID: " << e.entity().id << std::endl;
-    }
+    std::cout << "Creating Dave entity " << std::endl;
+
+    Entity e = Entity::create();
+    e.addAll(
+        Position{topLeft, 0},  // Render from top-left (SDL world)
+        Drawable{DAVE_STANDING, DAVE_TEX_SCALE, true, false},
+        Collider{daveBody},
+        Intent{},
+        Animation{DAVE_ANIMATION, 1, 4, 0, 0, Animation::Type::DAVE},
+        Input{SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_RIGHT, SDL_SCANCODE_LEFT},
+        Dave{},
+        GroundStatus{true}
+    );
+
+    b2Body_SetUserData(daveBody, new ent_type{e.entity()});
+    std::cout << "Dave entity created with ID: " << e.entity().id << std::endl;
+}
+
 
     void DaveGame::createWall(SDL_FPoint p, float w, float h) const {
+        //     const float width = w;
+        //     const float height = h;
+        //
+        //
+        //     b2BodyDef wallBodyDef = b2DefaultBodyDef();
+        //     wallBodyDef.type = b2_staticBody;
+        //     wallBodyDef.position = {p.x / BOX_SCALE, p.y / BOX_SCALE};
+        //
+        //     b2BodyId wallBody = b2CreateBody(boxWorld, &wallBodyDef);
+        //
+        //     b2ShapeDef shapeDef = b2DefaultShapeDef();
+        //     shapeDef.enableSensorEvents = true;
+        //
+        //     b2Polygon box = b2MakeBox((width/ BOX_SCALE) / 2.f, (height /  BOX_SCALE) / 2.f);
+        //     b2ShapeId shape = b2CreatePolygonShape(wallBody, &shapeDef, &box);
+        //
+        //     Entity e = Entity::create();
+        //     e.addAll(
+        //         Position{p, 0},
+        //         Collider{wallBody},
+        //         Wall{shape, {width, height}},
+        //         Drawable{RED_BLOCK,BLOCK_TEX_SCALE, true,false}
+        //     );
+        //     b2Body_SetUserData(wallBody, new ent_type{e.entity()});
+        // }
         const float width = w;
         const float height = h;
 
+        SDL_FPoint center = {
+            p.x + width / 2.0f,
+            p.y + height / 2.0f
+        };
 
         b2BodyDef wallBodyDef = b2DefaultBodyDef();
         wallBodyDef.type = b2_staticBody;
-        wallBodyDef.position = {p.x / BOX_SCALE, p.y / BOX_SCALE};
+        wallBodyDef.position = {center.x / BOX_SCALE, center.y / BOX_SCALE};
+        wallBodyDef.fixedRotation = true;
 
         b2BodyId wallBody = b2CreateBody(boxWorld, &wallBodyDef);
 
         b2ShapeDef shapeDef = b2DefaultShapeDef();
+
         shapeDef.enableSensorEvents = true;
 
-        b2Polygon box = b2MakeBox((width/ BOX_SCALE) / 2.f, (height /  BOX_SCALE) / 2.f);
+        b2Polygon box = b2MakeBox(width / 2.0f / BOX_SCALE, height / 2.0f / BOX_SCALE);
         b2ShapeId shape = b2CreatePolygonShape(wallBody, &shapeDef, &box);
 
         Entity e = Entity::create();
         e.addAll(
-            Position{p, 0},
+            Position{p, 0},  // Still use top-left for rendering if needed
             Collider{wallBody},
             Wall{shape, {width, height}},
-            Drawable{{86,380,11,11},BLOCK_TEX_SCALE, true,false}
+            Drawable{RED_BLOCK, BLOCK_TEX_SCALE, true, false}
         );
         b2Body_SetUserData(wallBody, new ent_type{e.entity()});
+
     }
-
     void DaveGame::createMap(uint8_t* map, int width, int height) {
-
+        //float offset = 0.5f*( RED_BLOCK.w * BLOCK_TEX_SCALE);
         for (int row = 0; row < height; ++row) {
             for (int col = 0; col < width; ++col) {
-                int row_to_print = row + 1;
+                int row_to_print = row;
                 uint8_t* map_row = (map + row * width);
-                if (map_row[col] == DaveGame::GRID_RED_BLOCK) {
-                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
-                    createWall(p, DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE);
+                if (map_row[col] == GRID_RED_BLOCK) {
+                    SDL_FPoint p = {(col * RED_BLOCK.w * BLOCK_TEX_SCALE), row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
+                    createWall(p, RED_BLOCK.w * BLOCK_TEX_SCALE, RED_BLOCK.h * BLOCK_TEX_SCALE);
                 }
-                else if (map_row[col] == DaveGame::GRID_DIAMOND) {
-                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
-                    createDiamond(p);
-                }
-                else if (map_row[col] == DaveGame::GRID_DOOR) {
-                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
-                    createDoor(p);
-                }
-                else if (map_row[col] == DaveGame::GRID_TROPHY) {
-                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
-                    createTrophy(p);
-                }
-                else if (map_row[col] == DaveGame::GRID_SENSOR_BACK) {
-                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
-                    createMoveScreenSensor(p, false, col/20);
-                }
-                else if (map_row[col] == DaveGame::GRID_SENSOR_FORWARD) {
-                    SDL_FPoint p = {col * DaveGame::RED_BLOCK.w * DaveGame::BLOCK_TEX_SCALE, row_to_print * DaveGame::RED_BLOCK.h * DaveGame::BLOCK_TEX_SCALE};
-                    createMoveScreenSensor(p, true, col/20);
-                }
+                // else if (map_row[col] == GRID_DIAMOND) {
+                //     SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
+                //     createDiamond(p);
+                // }
+                // else if (map_row[col] == GRID_DOOR) {
+                //     SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
+                //     createDoor(p);
+                // }
+                // else if (map_row[col] == GRID_TROPHY) {
+                //     SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
+                //     createTrophy(p);
+                // }
+                // else if (map_row[col] == GRID_SENSOR_BACK) {
+                //     SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
+                //     createMoveScreenSensor(p, false, col/20);
+                // }
+                // else if (map_row[col] == GRID_SENSOR_FORWARD) {
+                //     SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
+                //     createMoveScreenSensor(p, true, col/20);
+                // }
             }
         }
     }
@@ -653,6 +779,7 @@ namespace dave_game
         }
 
     }
+
     void DaveGame::createLevelAndHealth() {
 
         Entity level = Entity::create();
@@ -682,7 +809,7 @@ namespace dave_game
 
     }
 
-    void DaveGame::createMoveScreenSensor(SDL_FPoint p,bool forward, int col) {
+    void DaveGame::createMoveScreenSensor(SDL_FPoint p, bool forward, int col) {
 
         b2BodyDef sensorBodyDef = b2DefaultBodyDef();
         sensorBodyDef.type = b2_staticBody;
@@ -693,7 +820,7 @@ namespace dave_game
         sensorShapeDef.enableSensorEvents = true;
         sensorShapeDef.isSensor = true;
 
-        b2Polygon sensorBox = b2MakeBox((TROPHY.w*BLOCK_TEX_SCALE/BOX_SCALE)/2, (TROPHY.h*BLOCK_TEX_SCALE/BOX_SCALE)/2);
+        b2Polygon sensorBox = b2MakeBox((RED_BLOCK.w*BLOCK_TEX_SCALE/BOX_SCALE)/2, (RED_BLOCK.h*BLOCK_TEX_SCALE/BOX_SCALE)/2);
         b2CreatePolygonShape(sensorBody, &sensorShapeDef, &sensorBox);
 
 
@@ -728,6 +855,7 @@ namespace dave_game
         );
         b2Body_SetUserData(trophyBody, new ent_type{trophy.entity()});
     }
+
     void DaveGame::EndGame() {
         Mask required = MaskBuilder()
             .set<Collider>()

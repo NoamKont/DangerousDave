@@ -118,7 +118,7 @@ namespace dave_game {
 /// @brief Stores global game state: score, lives, and level.
     struct GameInfo {
         int score = 0;
-        int lives = 3;
+        int lives = 2;
         int level = 1;
         float screenOffset = 0.f; ///< Offset for scrolling background
     };
@@ -136,10 +136,15 @@ namespace dave_game {
         int value = 1000;
     };
 
+    struct Spikes{};
+
     struct DoorLabel{};
 
     struct ScoreLabel{};
     struct LevelLabel{};
+    struct LivesHead {
+        int index;
+    };
 
     struct MoveScreenSensor {
         bool forward = true;
@@ -167,6 +172,9 @@ namespace dave_game {
 
         void prepareWalls() const;
         void createWall(SDL_FPoint p) const;
+
+        void createSpikes(SDL_FPoint p);
+
         void createMap(uint8_t* map, int width, int height);
         void createDiamond(SDL_FPoint p);
         void createDoor(SDL_FPoint p);
@@ -230,7 +238,16 @@ namespace dave_game {
         static constexpr SDL_FRect DOOR{ 525, 366, 118, 118 };
         static constexpr SDL_FRect TROPHY{ 373, 370, 118, 118 };
         static constexpr SDL_FRect RED_BLOCK{ 221, 218, 118, 118 };
-        //static constexpr SDL_FRect RED_BLOCK{ 230, 226, 100, 100 };
+
+
+        static constexpr SDL_FRect FIRE1{ 1674, 189, 83, 104 };
+        static constexpr SDL_FRect FIRE2{ 1790, 196, 84, 95 };
+
+        static constexpr SDL_FRect SPIKES{ 839, 235, 118, 118 };
+
+
+
+
 
         static constexpr SDL_FRect SCORE_1{ 1671, 738, 40, 73 };
         static constexpr SDL_FRect SCORE_2{ 1740, 738, 60, 70 };
@@ -288,6 +305,7 @@ namespace dave_game {
         static constexpr uint8_t GRID_TROPHY = 4;
         static constexpr uint8_t GRID_SENSOR_BACK = 5;
         static constexpr uint8_t GRID_SENSOR_FORWARD = 6;
+        static constexpr uint8_t GRID_SPIKES = 7;
 
         static constexpr int SCORE_DIGITS_COUNT = 5;
 
@@ -528,9 +546,9 @@ static inline uint8_t map_stage2[10][40] = {
         GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
         GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
         GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
-        GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
+        GRID_SPIKES, GRID_SPIKES, GRID_SPIKES, GRID_SPIKES, GRID_SPIKES,
         // repeat
-        GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
+        GRID_SPIKES, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
         GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
         GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK,
         GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_RED_BLOCK

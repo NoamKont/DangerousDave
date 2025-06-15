@@ -53,7 +53,7 @@ namespace dave_game
         createMap(&map_stage2[0][0], MAP_WIDTH * 2, MAP_HEIGHT);
 
         createDave();
-        //createStatusBar();
+        createStatusBar();
 
     }
 
@@ -167,7 +167,7 @@ namespace dave_game
                     if (i.up && groundStatus.onGround) {
 
                         groundStatus.onGround = false;
-                        float jumpVelocity = 5.4f;
+                        float jumpVelocity = 7.4f;
                         float mass = b2Body_GetMass(c.b);
                         b2Vec2 impulse = {0.0f, -mass * jumpVelocity};
                         b2Body_ApplyLinearImpulseToCenter(c.b, impulse, true);
@@ -215,6 +215,7 @@ namespace dave_game
                 d.visible = true;
             }
         }
+
         static const Mask doorMask = MaskBuilder()
            .set<Door>()
            .build();
@@ -245,6 +246,7 @@ namespace dave_game
             bool visitorIsDoor = World::mask(*visitorEntity).test(Component<Door>::Bit);
             bool visitorIsTrophy = World::mask(*visitorEntity).test(Component<Trophy>::Bit);
             bool visitorIsMoveScreen = World::mask(*visitorEntity).test(Component<MoveScreenSensor>::Bit);
+            bool visitorIsSpikes = World::mask(*visitorEntity).test(Component<Spikes>::Bit);
 
             if(sensorIsDave && visitorIsWall)
             {
@@ -264,7 +266,6 @@ namespace dave_game
                 }
             }
             else if (sensorIsDave && visitorIsTrophy) {
-                //auto& gameInfo = World::getComponent<GameInfo>(*sensorEntity);
                 auto& trophy = World::getComponent<Trophy>(*visitorEntity);
                 gameInfo.score += trophy.value; // Increase score by 100 for collecting a trophy
                 World::destroyEntity(*visitorEntity);
@@ -278,6 +279,17 @@ namespace dave_game
                     gameInfo.screenOffset += .5f; // Move screen forward
                 } else if (!moveScreen.forward && moveScreen.col == screen - 1) {
                     gameInfo.screenOffset -= .5f; // Move screen backward
+                }
+            }
+            else if (sensorIsDave && visitorIsSpikes) {
+                gameInfo.lives--;
+                if (gameInfo.lives <= 0) {
+                    EndGame(); // End game if no lives left
+                }else {
+                    gameInfo.screenOffset = 0.f;
+                    World::destroyEntity(*sensorEntity);
+                    b2DestroyBody(sensor);
+                    createDave();
                 }
 
             }
@@ -324,6 +336,7 @@ namespace dave_game
     void DaveGame::StatusBarSystem() {
         int score = gameInfo.score;
         int digit = 0;
+        int lives= gameInfo.lives;
 
         static const Mask score_mask = MaskBuilder()
             .set<ScoreLabel>()
@@ -334,9 +347,14 @@ namespace dave_game
             .set<LevelLabel>()
             .set<Drawable>()
             .build();
+        static const Mask Lives = MaskBuilder()
+            .set<LivesHead>()
+            .set<Drawable>()
+            .build();
 
-        for (id_type i =0; i<World::maxId().id; ++i) {
+        for (id_type i =0; i <= World::maxId().id; ++i) {
             ent_type e{i};
+
             if (World::mask(e).test(score_mask)) {
                 digit = score % 10;
                 score /= 10;
@@ -346,6 +364,12 @@ namespace dave_game
             else if (World::mask(e).test(level_mask)) {
                 auto& drawable = World::getComponent<Drawable>(e);
                 drawable.part = NUMBERS_SPRITES[gameInfo.level].part;
+            }
+            else if (World::mask(e).test(Lives)) {
+                auto& lh = World::getComponent<LivesHead>(e);
+                if (gameInfo.lives == lh.index) {
+                    World::destroyEntity(e);
+                }
             }
         }
     }
@@ -368,41 +392,41 @@ namespace dave_game
             {
                 continue;
             }
-
-            if (World::mask(e).test(Component<Dave>::Bit) || World::mask(e).test(Component<Wall>::Bit))
-            {
-                const Collider& collider = World::getComponent<Collider>(e);
-                //const auto& pos = World::getComponent<Position>(e);
-
-                    b2BodyId body = collider.b;
-
-                    // Get Box2D center position (in meters)
-                    b2Vec2 pos = b2Body_GetPosition(body);
-
-                    // Convert to pixels
-                    float centerX = pos.x * BOX_SCALE;
-                    float centerY = pos.y * BOX_SCALE;
-                    float w,h;
-                    if ( World::mask(e).test(Component<Wall>::Bit)) {
-
-                        w = RED_BLOCK.w * BLOCK_TEX_SCALE; // back to pixels
-                        h = RED_BLOCK.h * BLOCK_TEX_SCALE;
-                    }else {
-                        w = DAVE_JUMPING.w * DAVE_TEX_SCALE; // back to pixels
-                        h = DAVE_JUMPING.h * DAVE_TEX_SCALE;
-                    }
-
-                    // Top-left corner
-                    SDL_FRect boxRect = {
-                        centerX - w/2 ,
-                        centerY - h/2,
-                        w,
-                        h
-                    };
-                SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
-                SDL_RenderRect(ren, &boxRect);
-                SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-            }
+            // //debug printing pyisic
+            //  if (World::mask(e).test(Component<Dave>::Bit) || World::mask(e).test(Component<Wall>::Bit))
+            //  {
+            //      const Collider& collider = World::getComponent<Collider>(e);
+            //      //const auto& pos = World::getComponent<Position>(e);
+            //
+            //          b2BodyId body = collider.b;
+            //
+            //          // Get Box2D center position (in meters)
+            //          b2Vec2 pos = b2Body_GetPosition(body);
+            //
+            //          // Convert to pixels
+            //          float centerX = pos.x * BOX_SCALE;
+            //          float centerY = pos.y * BOX_SCALE;
+            //          float w,h;
+            //          if ( World::mask(e).test(Component<Wall>::Bit)) {
+            //
+            //              w = RED_BLOCK.w * BLOCK_TEX_SCALE; // back to pixels
+            //              h = RED_BLOCK.h * BLOCK_TEX_SCALE;
+            //          }else {
+            //              w = DAVE_JUMPING.w * DAVE_TEX_SCALE; // back to pixels
+            //              h = DAVE_JUMPING.h * DAVE_TEX_SCALE;
+            //          }
+            //
+            //          // Top-left corner
+            //          SDL_FRect boxRect = {
+            //              centerX - w/2 - (gameInfo.screenOffset * (!drawable.isStatic) * WIN_WIDTH) ,
+            //              centerY - h/2,
+            //              w,
+            //              h
+            //          };
+            //      SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
+            //      SDL_RenderRect(ren, &boxRect);
+            //      SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+            //  }
 
             const auto& pos = World::getComponent<Position>(e);
             const auto& drawable = World::getComponent<Drawable>(e);
@@ -411,13 +435,12 @@ namespace dave_game
             {
                 continue; // Skip rendering if not visible
             }
-
             const SDL_FRect dst = {
-                pos.p.x - drawable.part.w / 2 - (gameInfo.screenOffset * (!drawable.isStatic) * WIN_WIDTH),
-                    pos.p.y - drawable.part.h / 2,
-                    drawable.part.w * drawable.scale,
-                    drawable.part.h * drawable.scale
-                };
+                pos.p.x - (drawable.part.w * drawable.scale / 2) - (gameInfo.screenOffset * (!drawable.isStatic) * WIN_WIDTH),
+                pos.p.y - (drawable.part.h * drawable.scale / 2),
+                drawable.part.w * drawable.scale,
+                drawable.part.h * drawable.scale
+            };
 
             SDL_FlipMode flip = drawable.flip ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
 
@@ -425,7 +448,6 @@ namespace dave_game
                 ren, tex, &drawable.part, &dst, 0,
                 nullptr, flip);
         }
-
         SDL_RenderPresent(ren);
     }
 
@@ -479,8 +501,8 @@ namespace dave_game
 
     // Calculate Dave's center position for Box2D
     SDL_FPoint center = {
-        topLeft.x + DAVE_JUMPING.w / 2.0f,
-        topLeft.y + DAVE_JUMPING.h / 2.0f
+        topLeft.x + DAVE_JUMPING.w * DAVE_TEX_SCALE / 2.0f,
+        topLeft.y + DAVE_JUMPING.h * DAVE_TEX_SCALE/ 2.0f
     };
 
     b2BodyDef daveBodyDef = b2DefaultBodyDef();
@@ -559,7 +581,6 @@ namespace dave_game
     std::cout << "Dave entity created with ID: " << e.entity().id << std::endl;
     }
 
-
     void DaveGame::createMap(uint8_t* map, int width, int height) {
         for (int row = 0; row < height; ++row) {
             for (int col = 0; col < width; ++col) {
@@ -573,30 +594,35 @@ namespace dave_game
                     SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
                     createDiamond(p);
                 }
-                // else if (map_row[col] == GRID_DOOR) {
-                //     SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
-                //     createDoor(p);
-                // }
+                else if (map_row[col] == GRID_DOOR) {
+                    SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
+                    createDoor(p);
+                }
                 else if (map_row[col] == GRID_TROPHY) {
                     SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
                     createTrophy(p);
                 }
-                // else if (map_row[col] == GRID_SENSOR_BACK) {
-                //     SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
-                //     createMoveScreenSensor(p, false, col/20);
-                // }
-                // else if (map_row[col] == GRID_SENSOR_FORWARD) {
-                //     SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
-                //     createMoveScreenSensor(p, true, col/20);
-                // }
-            }
+                else if (map_row[col] == GRID_SENSOR_BACK) {
+                    SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
+                    createMoveScreenSensor(p, false, col/20);
+                }
+                else if (map_row[col] == GRID_SENSOR_FORWARD) {
+                    SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
+                    createMoveScreenSensor(p, true, col/20);
+                }
+                else if (map_row[col] == GRID_SPIKES) {
+                    SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
+                    createSpikes(p);
+                }
+                    // Spikes are not implemented yet
+                }
         }
     }
 
     void DaveGame::createWall(SDL_FPoint p) const {
         SDL_FPoint center = {
-            p.x + RED_BLOCK.w / 2.0f,
-            p.y + RED_BLOCK.h / 2.0f
+            p.x + RED_BLOCK.w * BLOCK_TEX_SCALE / 2.0f,
+            p.y + RED_BLOCK.h * BLOCK_TEX_SCALE / 2.0f
         };
 
         b2BodyDef wallBodyDef = b2DefaultBodyDef();
@@ -615,7 +641,7 @@ namespace dave_game
 
         Entity e = Entity::create();
         e.addAll(
-            Position{center, 0},  // Still use top-left for rendering if needed
+            Position{{}, 0},  // Still use top-left for rendering if needed
             Collider{wallBody},
             Wall{shape, {RED_BLOCK.w, RED_BLOCK.h}},
             Drawable{RED_BLOCK, BLOCK_TEX_SCALE, true, false}
@@ -624,11 +650,36 @@ namespace dave_game
 
     }
 
+    void DaveGame::createSpikes(SDL_FPoint p) {
+        SDL_FPoint center = {
+            p.x + SPIKES.w * BLOCK_TEX_SCALE / 2.0f,
+            p.y + SPIKES.h * BLOCK_TEX_SCALE / 2.0f
+        };
+        b2BodyDef spikeBodyDef = b2DefaultBodyDef();
+        spikeBodyDef.type = b2_staticBody;
+        spikeBodyDef.position = {center.x / BOX_SCALE, center.y / BOX_SCALE};
+        b2BodyId spikeBody = b2CreateBody(boxWorld, &spikeBodyDef);
+
+        b2ShapeDef spikeShapeDef = b2DefaultShapeDef();
+        spikeShapeDef.enableSensorEvents = true;
+
+        b2Polygon spikeBox = b2MakeBox((DIAMOND.w*BLOCK_TEX_SCALE/BOX_SCALE)/2, (DIAMOND.h*BLOCK_TEX_SCALE/BOX_SCALE)/2);
+        b2CreatePolygonShape(spikeBody, &spikeShapeDef, &spikeBox);
+
+        Entity ent = Entity::create();
+        ent.addAll(
+            Position{center, 0},
+            Drawable{SPIKES, BLOCK_TEX_SCALE, true, false},
+            Spikes{}
+        );
+        b2Body_SetUserData(spikeBody, new ent_type{ent.entity()});
+    }
+
     void DaveGame::createDiamond(SDL_FPoint p) {
 
         SDL_FPoint center = {
-            p.x + DIAMOND.w / 2.0f,
-            p.y + DIAMOND.h / 2.0f
+            p.x + DIAMOND.w * BLOCK_TEX_SCALE / 2.0f,
+            p.y + DIAMOND.h * BLOCK_TEX_SCALE / 2.0f
         };
         b2BodyDef diamondBodyDef = b2DefaultBodyDef();
         diamondBodyDef.type = b2_staticBody;
@@ -653,8 +704,8 @@ namespace dave_game
     void DaveGame::createTrophy(SDL_FPoint p) {
 
         SDL_FPoint center = {
-            p.x + DIAMOND.w / 2.0f,
-            p.y + DIAMOND.h / 2.0f
+            p.x + TROPHY.w * BLOCK_TEX_SCALE / 2.0f,
+            p.y + TROPHY.h * BLOCK_TEX_SCALE / 2.0f
         };
 
         b2BodyDef trophyBodyDef = b2DefaultBodyDef();
@@ -682,8 +733,8 @@ namespace dave_game
     void DaveGame::createDoor(SDL_FPoint p) {
 
         SDL_FPoint center = {
-            p.x + DIAMOND.w / 2.0f,
-            p.y + DIAMOND.h / 2.0f
+            p.x + DOOR.w * BLOCK_TEX_SCALE / 2.0f,
+            p.y + DOOR.h * BLOCK_TEX_SCALE / 2.0f
         };
 
         b2BodyDef doorBodyDef = b2DefaultBodyDef();
@@ -707,12 +758,11 @@ namespace dave_game
         b2Body_SetUserData(doorBody, new ent_type{door.entity()});
     }
 
-
     void DaveGame::createMoveScreenSensor(SDL_FPoint p, bool forward, int col) {
 
         SDL_FPoint center = {
-            p.x + DIAMOND.w / 2.0f,
-            p.y + DIAMOND.h / 2.0f
+            p.x + RED_BLOCK.w * BLOCK_TEX_SCALE / 2.0f,
+            p.y + RED_BLOCK.h * BLOCK_TEX_SCALE / 2.0f
         };
 
         b2BodyDef sensorBodyDef = b2DefaultBodyDef();
@@ -737,6 +787,7 @@ namespace dave_game
 
     }
 
+
     void DaveGame::createStatusBar() {
         createTitles();
         createScoreBar();
@@ -748,20 +799,20 @@ namespace dave_game
 
         auto score = Entity::create();
         score.addAll(
-            Position{{25, 10}, 0},
+            Position{{2 * RED_BLOCK.w * BLOCK_TEX_SCALE, 35}, 0},
             Drawable{SCORE_SPRITE, BLOCK_TEX_SCALE, true, false, true}
         );
 
 
         auto level = Entity::create();
         level.addAll(
-            Position{{500, 10}, 0},
+            Position{{9 * RED_BLOCK.w * BLOCK_TEX_SCALE, 35}, 0},
             Drawable{LEVEL_SPRITE, BLOCK_TEX_SCALE, true, false, true}
         );
 
         auto daves = Entity::create();
         daves.addAll(
-            Position{{800, 10}, 0},
+            Position{{13 * RED_BLOCK.w * BLOCK_TEX_SCALE, 35}, 0},
             Drawable{HEALTH_SPRITE, BLOCK_TEX_SCALE, true, false, true}
         );
 
@@ -778,7 +829,7 @@ namespace dave_game
         for (int i=SCORE_DIGITS_COUNT - 1; i >= 0; --i) {
             auto entity = Entity::create();
             entity.addAll(
-                Position{{(i+1) * 40.f + 210, 10}, 0},
+                Position{{(i+1) * 40.f + 210, 35}, 0},
                 Drawable{NUMBERS_SPRITES[i+5]},
                 ScoreLabel{}
             );
@@ -790,33 +841,31 @@ namespace dave_game
 
         Entity level = Entity::create();
         level.addAll(
-            Position{{700, 10}, 0},
+            Position{{700, 35}, 0},
             Drawable{NUMBERS_SPRITES[0]},
             LevelLabel{}
         );
 
         Entity health1 = Entity::create();
         health1.addAll(
-            Position{{1020, 10}, 0},
-            Drawable{DAVE_HEALTH, BLOCK_TEX_SCALE, true, false, true}
+            Position{{1020, 35}, 0},
+            Drawable{DAVE_HEALTH, BLOCK_TEX_SCALE, true, false, true},
+            LivesHead{0}
         );
         Entity health2 = Entity::create();
         health2.addAll(
-            Position{{1070, 10}, 0},
-            Drawable{DAVE_HEALTH, BLOCK_TEX_SCALE, true, false, true}
+            Position{{1070, 35}, 0},
+            Drawable{DAVE_HEALTH, BLOCK_TEX_SCALE, true, false, true},
+            LivesHead{1}
         );
         Entity health3 = Entity::create();
         health3.addAll(
-            Position{{1120, 10}, 0},
-            Drawable{DAVE_HEALTH, BLOCK_TEX_SCALE, true, false, true}
+            Position{{1120, 35}, 0},
+            Drawable{DAVE_HEALTH, BLOCK_TEX_SCALE, true, false, true},
+            LivesHead{2}
         );
-
-
-
+        cout << "Created head" <<  health3.entity().id <<endl;
     }
-
-
-
 
 
     void DaveGame::EndGame() {

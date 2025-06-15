@@ -9,8 +9,7 @@
 
 using namespace bagel;
 using namespace std;
-namespace dave_game
-{
+namespace dave_game{
     void DaveGame::run()
     {
         SDL_SetRenderDrawColor(ren, 0,0,0,255);
@@ -994,7 +993,6 @@ namespace dave_game
         );
         cout << "Created health icon" <<  health3.entity().id <<endl;
     }
-
 
     void DaveGame::EndGame() {
         Mask required = MaskBuilder()

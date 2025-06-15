@@ -104,7 +104,6 @@ namespace dave_game {
 /// @brief Represents a door – can be open or closed.
     struct Door {
         bool open = false;
-    };
 
 /// @brief Represents a  Diamond Prize  and score value of the collectible entity.
     struct Diamond {
@@ -118,7 +117,7 @@ namespace dave_game {
 /// @brief Stores global game state: score, lives, and level.
     struct GameInfo {
         int score = 0;
-        int lives = 2;
+        int lives = 3;
         int level = 1;
         float screenOffset = 0.f; ///< Offset for scrolling background
     };
@@ -139,9 +138,9 @@ namespace dave_game {
     struct Spikes{};
 
     struct DoorLabel{};
-
     struct ScoreLabel{};
     struct LevelLabel{};
+
     struct LivesHead {
         int index;
     };
@@ -170,26 +169,29 @@ namespace dave_game {
         void AnimationSystem();
         void box_system();
 
-        void prepareWalls() const;
-        void createWall(SDL_FPoint p) const;
-
-        void createSpikes(SDL_FPoint p);
-
+        void loadLevel(int level);
+        void unloadLevel();
+        void levelAnimation();
         void createMap(uint8_t* map, int width, int height);
+
+
+        void createDave(int startCol, int startRow);
+        void createWall(SDL_FPoint p) const;
         void createDiamond(SDL_FPoint p);
         void createDoor(SDL_FPoint p);
+        void createTrophy(SDL_FPoint p);
+        void createSpikes(SDL_FPoint p);
+        void createMoveScreenSensor(SDL_FPoint p,bool forward, int col);
+        void createBlock(SDL_FPoint p,SDL_FRect r);
 
         void createStatusBar();
         void createTitles();
         void createScoreBar();
         void createLevelAndHealth();
-        void createMoveScreenSensor(SDL_FPoint p,bool forward, int col);
 
-        void createTrophy(SDL_FPoint p);
 
         void EndGame();
 
-        void createDave();
 
 
         // static constexpr SDL_FRect RED_BLOCK {86,380,11,11};
@@ -239,6 +241,9 @@ namespace dave_game {
         static constexpr SDL_FRect TROPHY{ 373, 370, 118, 118 };
         static constexpr SDL_FRect RED_BLOCK{ 221, 218, 118, 118 };
 
+        static constexpr SDL_FRect SAND{ 525, 218, 118, 118 };
+        static constexpr SDL_FRect SKY{ 66, 667, 118, 118 };
+
 
         static constexpr SDL_FRect FIRE1{ 1674, 189, 83, 104 };
         static constexpr SDL_FRect FIRE2{ 1790, 196, 84, 95 };
@@ -260,6 +265,8 @@ namespace dave_game {
         static constexpr SDL_FRect SCORE_8{ 1814, 842, 60, 68 };
         static constexpr SDL_FRect SCORE_9{ 1887, 842, 59, 68 };
         static constexpr SDL_FRect SCORE_0{ 1961, 842, 60, 68 };
+
+        bool skipSensorEvents = false;
 
 
         static constexpr int MAP_WIDTH = 20;
@@ -306,6 +313,8 @@ namespace dave_game {
         static constexpr uint8_t GRID_SENSOR_BACK = 5;
         static constexpr uint8_t GRID_SENSOR_FORWARD = 6;
         static constexpr uint8_t GRID_SPIKES = 7;
+        static constexpr uint8_t GRID_SKY = 8;
+        static constexpr uint8_t GRID_SAND = 9;
 
         static constexpr int SCORE_DIGITS_COUNT = 5;
 
@@ -315,6 +324,40 @@ namespace dave_game {
         GameInfo gameInfo;
 
         b2WorldId boxWorld = b2_nullWorldId;
+
+        static inline uint8_t walkingMap[5][20] = {
+            /* row 0 (sky) */
+            { GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY,
+              GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY,
+              GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY,
+              GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY },
+
+            /* row 1 (sky) */
+            { GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY,
+              GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY,
+              GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY,
+              GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY, GRID_SKY },
+
+            /* row 2 (background) */
+            { GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+                GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+                GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+              GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, },
+
+
+            /* row 3 (background) */
+            { GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+                GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+                GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+              GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_DOOR, },
+
+            /* row 4 (sand) */
+            { GRID_SAND, GRID_SAND, GRID_SAND, GRID_SAND, GRID_SAND,
+              GRID_SAND, GRID_SAND, GRID_SAND, GRID_SAND, GRID_SAND,
+              GRID_SAND, GRID_SAND, GRID_SAND, GRID_SAND, GRID_SAND,
+              GRID_SAND, GRID_SAND, GRID_SAND, GRID_SAND, GRID_SAND }
+        };
+
 
         static inline uint8_t map[10][20] = {
     /* row 0 (top border) */

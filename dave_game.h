@@ -175,7 +175,6 @@ namespace dave_game {
         void createScoreBar();
         void createLevelAndHealth();
         void createMoveScreenSensor(SDL_FPoint p,bool forward, int col);
-        void createBatMonster(SDL_FPoint p);
 
         void createTrophy(SDL_FPoint p);
 
@@ -187,70 +186,7 @@ namespace dave_game {
         static constexpr float	DAVE_TEX_SCALE = 4.f;
         static constexpr float	BLOCK_TEX_SCALE = 6.f;
 
-        // static constexpr SDL_FRect RED_BLOCK {86,380,11,11};
-        // static constexpr SDL_FRect DAVE_HEALTH{ 1, 213, 8, 9 };
-        // static constexpr SDL_FRect SCORE_SPRITE{192, 214, 39, 7};
-        // static constexpr SDL_FRect LEVEL_SPRITE{146, 214, 33, 7};
-        // static constexpr SDL_FRect HEALTH_SPRITE{102, 214, 37, 7};
-
-        // static constexpr SDL_FRect DAVE_STANDING{ 5, 13, 8, 16 };
-        // static constexpr SDL_FRect DAVE_WALKING_1{27,13,12,16};
-        // static constexpr SDL_FRect DAVE_WALKING_2{78,13,12,16};
-        // static constexpr SDL_FRect DAVE_IDLE{ 155, 13, 7, 16 };
-        // static constexpr SDL_FRect DAVE_JUMPING{127,13,13,14};
-        //
-        // static constexpr SDL_FRect SCORE_0{ 294, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_1{ 237, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_2{ 243, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_3{ 250, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_4{ 256, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_5{ 262, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_6{ 269, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_7{ 275, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_8{ 282, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_9{ 288, 214, 6, 7 };
-
-        //static constexpr float	BOX_SCALE = 64.f;
-        static constexpr float	BOX_SCALE = 35.5f;
-        static constexpr float	DAVE_TEX_SCALE = 0.42f;
-        static constexpr float	BLOCK_TEX_SCALE = 0.56;
-
-
-        static constexpr SDL_FRect DAVE_HEALTH{ 1419, 804, 79, 75 };
-        static constexpr SDL_FRect SCORE_SPRITE{1082, 694, 280, 71};
-        static constexpr SDL_FRect HEALTH_SPRITE{1082, 804, 273, 70};
-        static constexpr SDL_FRect LEVEL_SPRITE{1082, 912, 287, 70};
-
-
         static constexpr SDL_FRect RED_BLOCK {86,380,11,11};
-        static constexpr SDL_FRect DAVE_STANDING{ 75, 38, 109, 155 };
-        static constexpr SDL_FRect DAVE_WALKING_1{223,38,117,155};
-        static constexpr SDL_FRect DAVE_WALKING_2{373,38,117,155};
-        static constexpr SDL_FRect DAVE_IDLE{ 75, 38, 109, 155 };
-        static constexpr SDL_FRect DAVE_JUMPING{676,38,131,155};
-
-        static constexpr SDL_FRect BAT_MONSTER_1{840,521,122,113};
-        static constexpr SDL_FRect BAT_MONSTER_2{683,521,147,111};
-
-        static constexpr SDL_FRect DIAMOND{ 231, 370, 118, 118 };
-        static constexpr SDL_FRect RED_DIAMOND{ 75, 370, 118, 118 };
-        static constexpr SDL_FRect DOOR{ 525, 366, 118, 118 };
-        static constexpr SDL_FRect TROPHY{ 373, 370, 118, 118 };
-        static constexpr SDL_FRect RED_BLOCK{ 221, 218, 118, 118 };
-        //static constexpr SDL_FRect RED_BLOCK{ 230, 226, 100, 100 };
-
-        static constexpr SDL_FRect SCORE_1{ 1671, 738, 40, 73 };
-        static constexpr SDL_FRect SCORE_2{ 1740, 738, 60, 70 };
-        static constexpr SDL_FRect SCORE_3{ 1808, 738, 60, 71 };
-        static constexpr SDL_FRect SCORE_4{ 1886, 738, 64, 70 };
-        static constexpr SDL_FRect SCORE_5{ 1967, 738, 55, 70 };
-
-        static constexpr SDL_FRect SCORE_6{ 1671, 842, 56, 68 };
-        static constexpr SDL_FRect SCORE_7{ 1740, 842, 61, 68 };
-        static constexpr SDL_FRect SCORE_8{ 1814, 842, 60, 68 };
-        static constexpr SDL_FRect SCORE_9{ 1887, 842, 59, 68 };
-        static constexpr SDL_FRect SCORE_0{ 1961, 842, 60, 68 };
-
 
         static constexpr int MAP_WIDTH = 20;
         static constexpr int MAP_HEIGHT = 10;

@@ -54,13 +54,6 @@ namespace dave_game
 
 
         createDave();
-        SDL_FPoint topLeft = {
-            DAVE_START_COLUMN * RED_BLOCK.w * BLOCK_TEX_SCALE,
-            2 * RED_BLOCK.h * BLOCK_TEX_SCALE
-        };
-
-        createBatMonster(topLeft);
-        //createStatusBar();
         createStatusBar();
 
     }
@@ -369,74 +362,6 @@ namespace dave_game
                 continue;
             }
 
-            if (World::mask(e).test(Component<Dave>::Bit))
-            {
-                const Collider& collider = World::getComponent<Collider>(e);
-
-                b2BodyId body = collider.b;
-
-                // Get Box2D center position (in meters)
-                b2Vec2 pos = b2Body_GetPosition(body);
-
-                // Convert to pixels
-                float centerX = pos.x * BOX_SCALE;
-                float centerY = pos.y * BOX_SCALE;
-
-                float w = DAVE_JUMPING.w * DAVE_TEX_SCALE; // back to pixels
-                float h = DAVE_JUMPING.h * DAVE_TEX_SCALE;
-
-
-                    // Top-left corner
-                    SDL_FRect boxRect = {
-                        centerX - w ,
-                        centerY - h ,
-                        w,
-                        h
-                    };
-                // std::cout << "Box: x=" << boxRect.x << ", y=" << boxRect.y
-                //           << ", w=" << boxRect.w << ", h=" << boxRect.h << '\n';
-                SDL_SetRenderDrawColor(ren, 0, 255, 0, 255);
-                SDL_RenderRect(ren, &boxRect);
-                SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
-
-
-                //cout<< "Rendering Dave at: " << centerX << ", " << centerY << endl;
-            }
-
-            if (World::mask(e).test(Component<Wall>::Bit))
-            {
-                const Collider& collider = World::getComponent<Collider>(e);
-
-                b2BodyId body = collider.b;
-
-                // Get Box2D center position (in meters)
-                b2Vec2 pos = b2Body_GetPosition(body);
-
-                // Convert to pixels
-                float centerX = pos.x * BOX_SCALE ;
-                float centerY = pos.y * BOX_SCALE;
-
-                float w = RED_BLOCK.w * BLOCK_TEX_SCALE; // back to pixels
-                float h = RED_BLOCK.h * BLOCK_TEX_SCALE ;
-
-
-                // Top-left corner
-                SDL_FRect boxRect = {
-                    centerX - w ,
-                    centerY - h ,
-                    w,
-                    h
-                };
-                // std::cout << "Box: x=" << boxRect.x << ", y=" << boxRect.y
-                //           << ", w=" << boxRect.w << ", h=" << boxRect.h << '\n';
-                SDL_SetRenderDrawColor(ren, 0, 255, 0, 255);
-                SDL_RenderRect(ren, &boxRect);
-                SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
-
-
-                //cout<< "Rendering Dave at: " << centerX << ", " << centerY << endl;
-            }
-
             const auto& pos = World::getComponent<Position>(e);
             const auto& drawable = World::getComponent<Drawable>(e);
 
@@ -586,7 +511,6 @@ namespace dave_game
         shapeDef.enableSensorEvents = true;
 
         b2Polygon box = b2MakeBox((width/ BOX_SCALE) / 2.f, (height /  BOX_SCALE) / 2.f);
-        b2Polygon box = b2MakeBox((RED_BLOCK.w*BLOCK_TEX_SCALE/BOX_SCALE)/2, (RED_BLOCK.h*BLOCK_TEX_SCALE/BOX_SCALE )/2);
         b2ShapeId shape = b2CreatePolygonShape(wallBody, &shapeDef, &box);
 
         Entity e = Entity::create();
@@ -817,50 +741,4 @@ namespace dave_game
             World::destroyEntity(e);
         }
     }
-
-    void DaveGame::createBatMonster(SDL_FPoint p) {
-        // Step 1: Correct center calculation (scaled)
-        SDL_FPoint center = {
-            p.x + (BAT_MONSTER_1.w * BLOCK_TEX_SCALE) / 2.0f,
-            p.y + (BAT_MONSTER_1.h * BLOCK_TEX_SCALE) / 2.0f
-        };
-
-        // Step 2: Box2D body creation
-        b2BodyDef monsterBodyDef = b2DefaultBodyDef();
-        monsterBodyDef.type = b2_kinematicBody;  // change to dynamic if you want movement
-        monsterBodyDef.position = {center.x / BOX_SCALE, center.y / BOX_SCALE};
-        b2BodyId monsterBody = b2CreateBody(boxWorld, &monsterBodyDef);
-
-        b2ShapeDef monsterShapeDef = b2DefaultShapeDef();
-        monsterShapeDef.enableSensorEvents = true;
-
-        b2Polygon monsterBox = b2MakeBox(
-            (BAT_MONSTER_1.w * BLOCK_TEX_SCALE / BOX_SCALE) / 2,
-            (BAT_MONSTER_1.h * BLOCK_TEX_SCALE / BOX_SCALE) / 2
-        );
-        b2CreatePolygonShape(monsterBody, &monsterShapeDef, &monsterBox);
-
-        // Step 3: Create animation frames (1 state, 2 frames)
-        auto* batFrames = new Drawable[2] {
-            { BAT_MONSTER_1, BLOCK_TEX_SCALE, true, false },
-            { BAT_MONSTER_2, BLOCK_TEX_SCALE, true, false }
-        };
-
-        auto** batStates = new Drawable*[1] {
-            batFrames
-        };
-
-        // Step 4: Entity creation with animation
-        Entity monster = Entity::create();
-        monster.addAll(
-            Position{center, 0},
-            Drawable{BAT_MONSTER_1, BLOCK_TEX_SCALE, true, false},
-            Collider{monsterBody},
-            Monster{},
-            Animation{batStates, 1, 2, 0, 0, Animation::Type::DAVE}  // optional: define BAT type if needed
-        );
-
-        b2Body_SetUserData(monsterBody, new ent_type{monster.entity()});
-    }
-
 }

@@ -13,10 +13,10 @@ namespace bagel
 		bool	AggregateUpdates = true;
 		bool	CallbackOnDestroy = true;
 		bool	DynamicResize = true;
-		int		IdBagSize = 50;
-		int		InitialEntities = 1000;
-		int		InitialPackedSize = 5;
-		int		MaxComponents = 100;
+		int		IdBagSize = 3000;
+		int		InitialEntities = 3000;
+		int		InitialPackedSize = 1000;
+		int		MaxComponents = 1000;
 	};
 
 	template <class T> struct Storage;

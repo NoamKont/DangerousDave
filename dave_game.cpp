@@ -20,6 +20,7 @@ namespace dave_game{
 
             InputSystem();
             MovementSystem();
+            CircularMotionSystem();
             box_system();
             CollisionSystem();
             AnimationSystem();
@@ -248,12 +249,23 @@ namespace dave_game{
             bool visitorIsTrophy = World::mask(*visitorEntity).test(Component<Trophy>::Bit);
             bool visitorIsMoveScreen = World::mask(*visitorEntity).test(Component<MoveScreenSensor>::Bit);
             bool visitorIsSpikes = World::mask(*visitorEntity).test(Component<Spikes>::Bit);
+            bool visitorIsMonster = World::mask(*visitorEntity).test(Component<Monster>::Bit);
+            bool visitorIsGun = World::mask(*visitorEntity).test(Component<Gun>::Bit);
 
-            if(sensorIsDave && visitorIsWall)
+            if (sensorIsDave && visitorIsWall)
             {
-                auto& groundStatus = World::getComponent<GroundStatus>(*visitorEntity);
-                groundStatus.onGround = true;
+                auto& davePos = World::getComponent<Position>(*sensorEntity);
+                auto& wallPos = World::getComponent<Position>(*visitorEntity);
+
+                float daveBottom = davePos.p.y + (DAVE_JUMPING.h * DAVE_TEX_SCALE / 2);
+                float wallTop = wallPos.p.y - (RED_BLOCK.h * BLOCK_TEX_SCALE / 2);
+
+                if (daveBottom <= wallTop + 4.f) { // 4px margin to allow slight overlap
+                    auto& groundStatus = World::getComponent<GroundStatus>(*sensorEntity);
+                    groundStatus.onGround = true;
+                }
             }
+
             else if (sensorIsDave && visitorIsDiamond) {
                 auto& diamond = World::getComponent<Diamond>(*visitorEntity);
                 gameInfo.score +=  diamond.value;
@@ -285,7 +297,7 @@ namespace dave_game{
                     gameInfo.screenOffset -= .5f; // Move screen backward
                 }
             }
-            else if (sensorIsDave && visitorIsSpikes) {
+            else if (sensorIsDave && visitorIsSpikes || sensorIsDave && visitorIsMonster) {
                 gameInfo.lives--;
                 if (gameInfo.lives <= 0) {
                     EndGame();
@@ -296,6 +308,17 @@ namespace dave_game{
                 b2DestroyBody(sensor);
                 createDave(DAVE_START_COLUMN, DAVE_START_ROW);
                 break;
+            }
+            else if (sensorIsDave && visitorIsGun) {
+                auto& gun = World::getComponent<Gun>(*visitorEntity);
+                World::destroyEntity(*visitorEntity);
+                b2DestroyBody(visitor);
+
+                auto gunEquipped = Entity::create();
+                gunEquipped.addAll(
+                    Position{{0.5 * RED_BLOCK.w * BLOCK_TEX_SCALE, 11.5 * RED_BLOCK.h * BLOCK_TEX_SCALE}, 0},
+                    Drawable{GUN, BLOCK_TEX_SCALE, true, false, true}
+                );
             }
         }
     }
@@ -336,11 +359,18 @@ namespace dave_game{
     void DaveGame::loadLevel(int level) {
         unloadLevel();
         gameInfo.screenOffset = 0.f;
-        if (level == 1) {
+        if (level == 2) {//temp for DEBUG - need to switch with level 1
             createMap(&map[0][0], MAP_WIDTH, MAP_HEIGHT);
             createDave(DAVE_START_COLUMN, DAVE_START_ROW);
+
             createStatusBar();
-        } else if (level == 2) {
+        } else if (level == 1) {
+            SDL_FPoint batMonsterSpawnPoint = {
+                BAT_MONSTER_START_COLUMN * RED_BLOCK.w * BLOCK_TEX_SCALE,
+                BAT_MONSTER_START_ROW * RED_BLOCK.h * BLOCK_TEX_SCALE
+            };
+
+            createBatMonster(batMonsterSpawnPoint);
             createMap(&map_stage2[0][0], MAP_WIDTH * 2, MAP_HEIGHT);
             cout << "Loaded map of level: " << level << endl;
             createDave(DAVE_START_COLUMN, DAVE_START_ROW);
@@ -493,11 +523,15 @@ namespace dave_game{
                      float centerX = pos.x * BOX_SCALE;
                      float centerY = pos.y * BOX_SCALE;
                      float w,h;
-                     if ( World::mask(e).test(Component<Wall>::Bit)) {
+                     if ( World::mask(e).test(Component<Wall>::Bit)) {///DEBUG
 
                          w = RED_BLOCK.w * BLOCK_TEX_SCALE; // back to pixels
                          h = RED_BLOCK.h * BLOCK_TEX_SCALE;
-                     }else {
+                     }else if ( World::mask(e).test(Component<Monster>::Bit)) {
+                         w = BAT_MONSTER_1.w * BLOCK_TEX_SCALE; // back to pixels
+                         h = BAT_MONSTER_1.h * BLOCK_TEX_SCALE;
+                     }
+                     else {
                          w = DAVE_JUMPING.w * DAVE_TEX_SCALE; // back to pixels
                          h = DAVE_JUMPING.h * DAVE_TEX_SCALE;
                      }
@@ -536,6 +570,33 @@ namespace dave_game{
         }
         SDL_RenderPresent(ren);
     }
+
+    void DaveGame::CircularMotionSystem()
+    {
+        static const Mask mask = MaskBuilder()
+            .set<CircularMotion>()
+            .set<Collider>()
+            .build();
+
+        float dt = PHYSICS_TIME_STEP; // seconds per frame
+
+        for (ent_type e{0}; e.id <= World::maxId().id; ++e.id) {
+            if (!World::mask(e).test(mask)) continue;
+
+            auto& motion = World::getComponent<CircularMotion>(e);
+            auto& col = World::getComponent<Collider>(e);
+
+            motion.angle += motion.angularSpeed * dt;
+            if (motion.angle > 2 * M_PI) motion.angle -= 2 * M_PI;
+
+            float newX = motion.center.x + motion.radius * cosf(motion.angle);
+            float newY = motion.center.y + motion.radius * sinf(motion.angle);
+
+            b2Body_SetTransform(col.b, {newX / BOX_SCALE, newY / BOX_SCALE}, b2MakeRot(0.0f));
+
+        }
+    }
+
 
 
     /// @brief Updates animation state for entities with visual animations.
@@ -605,6 +666,18 @@ namespace dave_game{
     daveShapeDef.density = 20.f;
     daveShapeDef.enableSensorEvents = false;
     daveShapeDef.isSensor = false;
+    b2SurfaceMaterial mat = {
+        .friction = 0.0f,
+        .restitution = 0.0f,
+        .rollingResistance = 0.0f,
+        .tangentSpeed = 0.0f,
+        .userMaterialId = 0,
+        .customColor = 0  // Or 0xFFFFFFFF if you want to debug
+    };
+    daveShapeDef.material = mat;
+
+
+
 
 
     b2Polygon daveBox = b2MakeBox(
@@ -702,6 +775,10 @@ namespace dave_game{
                     SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
                     createBlock(p, SAND);
                 }
+                else if (map_row[col] == GRID_GUN) {
+                    SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
+                    createGun(p);
+                }
             }
         }
     }
@@ -746,8 +823,17 @@ namespace dave_game{
         b2BodyId wallBody = b2CreateBody(boxWorld, &wallBodyDef);
 
         b2ShapeDef shapeDef = b2DefaultShapeDef();
-
         shapeDef.enableSensorEvents = true;
+
+        b2SurfaceMaterial wallMat = {
+            .friction = 0.0f,
+            .restitution = 0.0f,
+            .rollingResistance = 0.0f,
+            .tangentSpeed = 0.0f,
+            .userMaterialId = 0,
+            .customColor = 0
+        };
+        shapeDef.material = wallMat;
 
         b2Polygon box = b2MakeBox((RED_BLOCK.w*BLOCK_TEX_SCALE/BOX_SCALE)/2, (RED_BLOCK.h*BLOCK_TEX_SCALE/BOX_SCALE)/2);
         b2ShapeId shape = b2CreatePolygonShape(wallBody, &shapeDef, &box);
@@ -994,6 +1080,33 @@ namespace dave_game{
         cout << "Created health icon" <<  health3.entity().id <<endl;
     }
 
+    void DaveGame::createGun(SDL_FPoint p) {
+
+        SDL_FPoint center = {
+            p.x + GUN.w * BLOCK_TEX_SCALE / 2.0f,
+            p.y + GUN.h * BLOCK_TEX_SCALE / 2.0f
+        };
+        b2BodyDef gunBodyDef = b2DefaultBodyDef();
+        gunBodyDef.type = b2_staticBody;
+        gunBodyDef.position = {center.x / BOX_SCALE, center.y / BOX_SCALE};
+        b2BodyId gunBody = b2CreateBody(boxWorld, &gunBodyDef);
+
+        b2ShapeDef gunShapeDef = b2DefaultShapeDef();
+        gunShapeDef.enableSensorEvents = true;
+
+        b2Polygon gunBox = b2MakeBox((GUN.w*BLOCK_TEX_SCALE/BOX_SCALE)/2, (GUN.h*BLOCK_TEX_SCALE/BOX_SCALE)/2);
+        b2CreatePolygonShape(gunBody, &gunShapeDef, &gunBox);
+
+        Entity gun = Entity::create();
+        gun.addAll(
+            Position{center, 0},
+            Drawable{GUN, BLOCK_TEX_SCALE, true, false},
+            Collider{gunBody},
+            Gun{}
+        );
+        b2Body_SetUserData(gunBody, new ent_type{gun.entity()});
+    }
+
     void DaveGame::EndGame() {
         Mask required = MaskBuilder()
             .set<Collider>()
@@ -1019,5 +1132,51 @@ namespace dave_game{
             }
             World::destroyEntity(e);
         }
+    }
+
+    void DaveGame::createBatMonster(SDL_FPoint p) {
+        // Step 1: Correct center calculation (scaled)
+        SDL_FPoint center = {
+        p.x + (BAT_MONSTER_1.w * BLOCK_TEX_SCALE) / 2.0f,
+        p.y + (BAT_MONSTER_1.h * BLOCK_TEX_SCALE) / 2.0f
+    };
+
+        // Step 2: Box2D body creation
+        b2BodyDef monsterBodyDef = b2DefaultBodyDef();
+        monsterBodyDef.type = b2_kinematicBody;  // change to dynamic if you want movement
+        monsterBodyDef.position = {center.x / BOX_SCALE, center.y / BOX_SCALE};
+        b2BodyId monsterBody = b2CreateBody(boxWorld, &monsterBodyDef);
+
+        b2ShapeDef monsterShapeDef = b2DefaultShapeDef();
+        monsterShapeDef.enableSensorEvents = true;
+
+        b2Polygon monsterBox = b2MakeBox(
+            (BAT_MONSTER_1.w * BLOCK_TEX_SCALE / BOX_SCALE) / 2,
+            (BAT_MONSTER_1.h * BLOCK_TEX_SCALE / BOX_SCALE) / 2
+        );
+        b2CreatePolygonShape(monsterBody, &monsterShapeDef, &monsterBox);
+
+        // Step 3: Create animation frames (1 state, 2 frames)
+        auto* batFrames = new Drawable[2] {
+            { BAT_MONSTER_1, BLOCK_TEX_SCALE, true, false },
+            { BAT_MONSTER_2, BLOCK_TEX_SCALE, true, false }
+        };
+
+        auto** batStates = new Drawable*[1] {
+            batFrames
+        };
+
+        // Step 4: Entity creation with animation
+        Entity monster = Entity::create();
+        monster.addAll(
+            Position{center, 0},
+            Drawable{BAT_MONSTER_1, BLOCK_TEX_SCALE, true, false},
+            Collider{monsterBody},
+            Monster{},
+            Animation{batStates, 1, 2, 0, 0, Animation::Type::DAVE},
+            CircularMotion{center, 50.0f, 1.5f}
+        );
+
+        b2Body_SetUserData(monsterBody, new ent_type{monster.entity()});
     }
 }

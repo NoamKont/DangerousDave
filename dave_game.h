@@ -149,6 +149,14 @@ namespace dave_game {
             int col = 0;
         };
 
+        struct CircularMotion {
+            SDL_FPoint center;  // center of the circular path (in pixels)
+            float radius;
+            float angularSpeed;  // radians per second
+            float angle = 0.0f;  // current angle
+        };
+
+
 
 
         class DaveGame {
@@ -167,6 +175,7 @@ namespace dave_game {
             void DeathSystem();
             void AnimationSystem();
             void box_system();
+            void CircularMotionSystem();
 
             void loadLevel(int level);
             void unloadLevel();
@@ -182,6 +191,8 @@ namespace dave_game {
             void createSpikes(SDL_FPoint p);
             void createMoveScreenSensor(SDL_FPoint p,bool forward, int col);
             void createBlock(SDL_FPoint p,SDL_FRect r);
+            void createBatMonster(SDL_FPoint p);
+            void createGun(SDL_FPoint p);
 
             void createStatusBar();
             void createTitles();
@@ -234,11 +245,15 @@ namespace dave_game {
             static constexpr SDL_FRect DAVE_IDLE{ 75, 38, 109, 155 };
             static constexpr SDL_FRect DAVE_JUMPING{676,38,131,155};
 
+            static constexpr SDL_FRect BAT_MONSTER_1{840,521,122,113};
+            static constexpr SDL_FRect BAT_MONSTER_2{683,521,147,111};
+
             static constexpr SDL_FRect DIAMOND{ 231, 370, 118, 118 };
             static constexpr SDL_FRect RED_DIAMOND{ 75, 370, 118, 118 };
             static constexpr SDL_FRect DOOR{ 525, 366, 118, 118 };
             static constexpr SDL_FRect TROPHY{ 373, 370, 118, 118 };
             static constexpr SDL_FRect RED_BLOCK{ 221, 218, 118, 118 };
+            static constexpr SDL_FRect GUN{ 1396, 890, 118, 118 };
 
             static constexpr SDL_FRect SAND{ 525, 218, 118, 118 };
             static constexpr SDL_FRect SKY{ 66, 667, 118, 118 };
@@ -248,8 +263,6 @@ namespace dave_game {
             static constexpr SDL_FRect FIRE2{ 1790, 196, 84, 95 };
 
             static constexpr SDL_FRect SPIKES{ 839, 235, 118, 118 };
-
-
 
 
 
@@ -296,8 +309,12 @@ namespace dave_game {
 
 
 
+
             static constexpr int DAVE_START_COLUMN = 1;
             static constexpr int DAVE_START_ROW = 9;
+
+            static constexpr int BAT_MONSTER_START_COLUMN = 17;
+            static constexpr int BAT_MONSTER_START_ROW = 3;
 
 
             static constexpr int STATUS_BAR_HEIGHT = 2;
@@ -314,6 +331,7 @@ namespace dave_game {
             static constexpr uint8_t GRID_SPIKES = 7;
             static constexpr uint8_t GRID_SKY = 8;
             static constexpr uint8_t GRID_SAND = 9;
+            static constexpr uint8_t GRID_GUN = 10;
 
             static constexpr int SCORE_DIGITS_COUNT = 5;
 
@@ -550,7 +568,7 @@ namespace dave_game {
                     GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
                     GRID_RED_BLOCK,  GRID_RED_BLOCK,  GRID_RED_BLOCK,  GRID_RED_BLOCK,
                     GRID_BACKGROUND, GRID_DIAMOND, GRID_RED_BLOCK, GRID_BACKGROUND,
-                    GRID_BACKGROUND,  GRID_BACKGROUND,  GRID_RED_BLOCK,  GRID_BACKGROUND,
+                    GRID_BACKGROUND,  GRID_GUN,  GRID_RED_BLOCK,  GRID_BACKGROUND,
                     GRID_BACKGROUND,  GRID_DIAMOND,  GRID_DIAMOND,
                     GRID_DIAMOND,
 
@@ -567,7 +585,7 @@ namespace dave_game {
                 // row 8
                 {
                     GRID_RED_BLOCK,
-                    GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+                    GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_GUN,
                     GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
                     GRID_RED_BLOCK, GRID_DIAMOND,      GRID_BACKGROUND,      GRID_RED_BLOCK,      GRID_RED_BLOCK,
                     GRID_BACKGROUND, GRID_BACKGROUND, GRID_SENSOR_BACK, GRID_SENSOR_FORWARD,

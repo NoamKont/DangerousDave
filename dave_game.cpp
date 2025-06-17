@@ -21,6 +21,7 @@ namespace dave_game{
             InputSystem();
             MovementSystem();
             CircularMotionSystem();
+            ShooterSystem();
             box_system();
             CollisionSystem();
             AnimationSystem();
@@ -149,6 +150,29 @@ namespace dave_game{
             }
         }
     }
+    /// @brief Controls shooting of AI entities
+    void DaveGame::ShooterSystem()
+    {
+        uint32_t now = SDL_GetTicks();
+
+        Mask required = MaskBuilder()
+            .set<Gun>()
+            .set<Monster>()
+            .build();
+
+        for (ent_type e{0}; e.id <= World::maxId().id; ++e.id) {
+            if (!World::mask(e).test(required)) continue;
+
+            auto& pos = World::getComponent<Position>(e);
+            auto& drawable = World::getComponent<Drawable>(e);
+            auto& lastShot = World::getComponent<LastShot>(e);
+
+            if (now - lastShot.time >= MONSTER_COOLDOWN_MS) {
+                createMonsterBullet(pos.p, true);
+                lastShot.time = now;
+            }
+        }
+    }
 
     /// @brief Controls movement of all entities with Position and Course.
     void DaveGame::MovementSystem()
@@ -262,6 +286,7 @@ namespace dave_game{
             bool visitorIsSpikes = World::mask(*visitorEntity).test(Component<Spikes>::Bit);
             bool visitorIsMonster = World::mask(*visitorEntity).test(Component<Monster>::Bit);
             bool visitorIsGun = World::mask(*visitorEntity).test(Component<Gun>::Bit);
+            bool visitorIsBullet = World::mask(*visitorEntity).test(Component<Bullet>::Bit);
 
             if (sensorIsDave && visitorIsWall)
             {
@@ -335,7 +360,12 @@ namespace dave_game{
                 World::addComponent<LastShot>(*sensorEntity, LastShot{});
             }
             else if (sensorIsBullet) {
-                if (visitorIsMonster) {
+                if (visitorIsBullet) {
+                    continue;
+                }
+
+                bool bulletFromMonster = World::mask(*sensorEntity).test(Component<Monster>::Bit);
+                if (visitorIsMonster && !bulletFromMonster) {
                     World::destroyEntity(*sensorEntity);
                     World::destroyEntity(*visitorEntity);
                     b2DestroyBody(sensor);
@@ -401,7 +431,7 @@ namespace dave_game{
                 BAT_MONSTER_START_ROW * RED_BLOCK.h * BLOCK_TEX_SCALE
             };
 
-            createBatMonster(batMonsterSpawnPoint);
+            createBatMonster(batMonsterSpawnPoint, true);
             createMap(&map_stage2[0][0], MAP_WIDTH * 2, MAP_HEIGHT);
             cout << "Loaded map of level: " << level << endl;
             createDave(DAVE_START_COLUMN, DAVE_START_ROW);
@@ -809,7 +839,6 @@ namespace dave_game{
                 else if (map_row[col] == GRID_GUN) {
                     SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
                     createGun(p);
-                    //createBullet(p, false);
                 }
             }
         }
@@ -1177,6 +1206,45 @@ namespace dave_game{
         b2Body_SetUserData(bulletBody, new ent_type{bullet.entity()});
     }
 
+    void DaveGame::createMonsterBullet(SDL_FPoint monsterPos, bool goingLeft) {
+
+        constexpr float bulletSpeed = 8.f;
+
+        SDL_FPoint center = {
+            monsterPos.x + (goingLeft ? -MONSTER_BULLET.w : MONSTER_BULLET.w),
+            monsterPos.y
+        };
+
+        b2BodyDef bulletBodyDef = b2DefaultBodyDef();
+        bulletBodyDef.type = b2_kinematicBody;
+        bulletBodyDef.position = {center.x / BOX_SCALE, center.y / BOX_SCALE};
+        b2BodyId bulletBody = b2CreateBody(boxWorld, &bulletBodyDef);
+
+        b2ShapeDef bulletShapeDef = b2DefaultShapeDef();
+        bulletShapeDef.enableSensorEvents = true;
+        bulletShapeDef.isSensor = true;
+
+        b2Polygon bulletBox = b2MakeBox(
+            (MONSTER_BULLET.w / BOX_SCALE) / 2.0f,
+            (MONSTER_BULLET.h / BOX_SCALE) / 2.0f
+        );
+        b2CreatePolygonShape(bulletBody, &bulletShapeDef, &bulletBox);
+
+        b2Vec2 velocity = { goingLeft ? -bulletSpeed : bulletSpeed, 0.f };
+        b2Body_SetLinearVelocity(bulletBody, velocity);
+
+        Entity bullet = Entity::create();
+        bullet.addAll(
+            Position{center, 0},
+            Drawable{MONSTER_BULLET, DAVE_TEX_SCALE, true, goingLeft}, // cropped part
+            Collider{bulletBody},
+            Bullet{},
+            Monster{}
+        );
+
+        b2Body_SetUserData(bulletBody, new ent_type{bullet.entity()});
+    }
+
 
     void DaveGame::EndGame() {
         Mask required = MaskBuilder()
@@ -1205,7 +1273,7 @@ namespace dave_game{
         }
     }
 
-    void DaveGame::createBatMonster(SDL_FPoint p) {
+    void DaveGame::createBatMonster(SDL_FPoint p, bool isGunMonster) {
         // Step 1: Correct center calculation (scaled)
         SDL_FPoint center = {
         p.x + (BAT_MONSTER_1.w * BLOCK_TEX_SCALE) / 2.0f,
@@ -1247,6 +1315,11 @@ namespace dave_game{
             Animation{batStates, 1, 2, 0, 0, Animation::Type::DAVE},
             CircularMotion{center, 50.0f, 1.5f}
         );
+
+        if (isGunMonster) {
+            World::addComponent(monster.entity(), Gun{});
+            World::addComponent(monster.entity(), LastShot{});
+        }
 
         b2Body_SetUserData(monsterBody, new ent_type{monster.entity()});
     }

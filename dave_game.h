@@ -180,6 +180,7 @@ namespace dave_game {
         void AnimationSystem();
         void box_system();
         void CircularMotionSystem();
+        void ShooterSystem();
 
         void loadLevel(int level);
         void unloadLevel();
@@ -195,9 +196,10 @@ namespace dave_game {
         void createSpikes(SDL_FPoint p);
         void createMoveScreenSensor(SDL_FPoint p,bool forward, int col);
         void createBlock(SDL_FPoint p,SDL_FRect r);
-        void createBatMonster(SDL_FPoint p);
+        void createBatMonster(SDL_FPoint p, bool isGunMonster = false);
         void createGun(SDL_FPoint p);
         void createBullet(SDL_FPoint davePos, bool goingLeft);
+        void createMonsterBullet(SDL_FPoint monsterPos, bool goingLeft);
 
 
         void createStatusBar();
@@ -261,6 +263,7 @@ namespace dave_game {
         static constexpr SDL_FRect RED_BLOCK{ 221, 218, 118, 118 };
         static constexpr SDL_FRect GUN{ 1396, 890, 118, 118 };
         static constexpr SDL_FRect BULLET{ 1538, 917, 53, 24 };
+        static constexpr SDL_FRect MONSTER_BULLET{ 1535, 966, 53, 24 };
 
         static constexpr SDL_FRect SAND{ 525, 218, 118, 118 };
         static constexpr SDL_FRect SKY{ 66, 667, 118, 118 };
@@ -288,6 +291,7 @@ namespace dave_game {
         bool skipSensorEvents = false;
 
         static constexpr uint32_t COOLDOWN_MS = 1000;
+        static constexpr uint32_t MONSTER_COOLDOWN_MS = 2000;
 
         static constexpr int MAP_WIDTH = 20;
         static constexpr int MAP_HEIGHT = 10;

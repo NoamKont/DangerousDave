@@ -420,10 +420,9 @@ namespace dave_game{
         unloadLevel();
         gameInfo.screenOffset = 0.f;
         (void)Component<Bullet>::Bit;
-        if (level == 2) {//temp for DEBUG - need to switch with level 1
+        if (level == 2) {//TODO temp for DEBUG - need to switch with level 1
             createMap(&map[0][0], MAP_WIDTH, MAP_HEIGHT);
             createDave(DAVE_START_COLUMN, DAVE_START_ROW);
-
             createStatusBar();
         } else if (level == 1) {
             SDL_FPoint batMonsterSpawnPoint = {
@@ -431,7 +430,7 @@ namespace dave_game{
                 BAT_MONSTER_START_ROW * RED_BLOCK.h * BLOCK_TEX_SCALE
             };
 
-            createBatMonster(batMonsterSpawnPoint, true);
+            //createBatMonster(batMonsterSpawnPoint, true);
             createMap(&map_stage2[0][0], MAP_WIDTH * 2, MAP_HEIGHT);
             cout << "Loaded map of level: " << level << endl;
             createDave(DAVE_START_COLUMN, DAVE_START_ROW);
@@ -585,9 +584,11 @@ namespace dave_game{
                      float centerY = pos.y * BOX_SCALE;
                      float w,h;
                      if ( World::mask(e).test(Component<Wall>::Bit)) {///DEBUG
-
-                         w = RED_BLOCK.w * BLOCK_TEX_SCALE; // back to pixels
-                         h = RED_BLOCK.h * BLOCK_TEX_SCALE;
+                         const Wall& wall = World::getComponent<Wall>(e); // stores shape ID
+                         w = wall.size.x * BLOCK_TEX_SCALE;
+                         h = wall.size.y * BLOCK_TEX_SCALE;
+                         // w = RED_BLOCK.w * BLOCK_TEX_SCALE; // back to pixels
+                         // h = RED_BLOCK.h * BLOCK_TEX_SCALE;
                      }else if ( World::mask(e).test(Component<Monster>::Bit)) {
                          w = BAT_MONSTER_1.w * BLOCK_TEX_SCALE; // back to pixels
                          h = BAT_MONSTER_1.h * BLOCK_TEX_SCALE;
@@ -799,12 +800,29 @@ namespace dave_game{
 
     void DaveGame::createMap(uint8_t* map, int width, int height) {
         for (int row = 0; row < height; ++row) {
+            int wallStartCol = -1;
             for (int col = 0; col < width; ++col) {
                 int row_to_print = row + 1; // Offset by 1 to account for the status bar
                 uint8_t* map_row = (map + row * width);
                 if (map_row[col] == GRID_RED_BLOCK) {
-                    SDL_FPoint p = {(col * RED_BLOCK.w * BLOCK_TEX_SCALE), row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
-                    createWall(p);
+                    if (wallStartCol == -1) {
+                        wallStartCol = col;  // start of new wall segment
+                    }
+                    if (col + 1 >= width || map_row[col+1] != GRID_RED_BLOCK) {
+                        // end of a wall segment
+                        int wallEndCol = col;  // exclusive
+
+                        float wallWidth = ((wallEndCol - wallStartCol) + 1)* RED_BLOCK.w ;
+                        float wallHeight = RED_BLOCK.h;
+
+                        SDL_FPoint p = {(wallStartCol * RED_BLOCK.w * BLOCK_TEX_SCALE), row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
+                        createWall(p, wallWidth, wallHeight);
+                        wallStartCol = -1;
+
+                    }
+
+                    //SDL_FPoint p = {(col * RED_BLOCK.w * BLOCK_TEX_SCALE), row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
+                    //createWall(p,RED_BLOCK.w,RED_BLOCK.h);
                 }
                 else if (map_row[col] == GRID_DIAMOND) {
                     SDL_FPoint p = {col * RED_BLOCK.w * BLOCK_TEX_SCALE, row_to_print * RED_BLOCK.h * BLOCK_TEX_SCALE};
@@ -870,10 +888,10 @@ namespace dave_game{
         std::cout << "BLock entity created with ID: " << ent.entity().id << std::endl;
     }
 
-    void DaveGame::createWall(SDL_FPoint p) const {
+    void DaveGame::createWall(SDL_FPoint p, float width, float height) const {
         SDL_FPoint center = {
-            p.x + RED_BLOCK.w * BLOCK_TEX_SCALE / 2.0f,
-            p.y + RED_BLOCK.h * BLOCK_TEX_SCALE / 2.0f
+            p.x + width * BLOCK_TEX_SCALE / 2.0f,
+            p.y + height * BLOCK_TEX_SCALE / 2.0f
         };
 
         b2BodyDef wallBodyDef = b2DefaultBodyDef();
@@ -896,14 +914,14 @@ namespace dave_game{
         };
         shapeDef.material = wallMat;
 
-        b2Polygon box = b2MakeBox((RED_BLOCK.w*BLOCK_TEX_SCALE/BOX_SCALE)/2, (RED_BLOCK.h*BLOCK_TEX_SCALE/BOX_SCALE)/2);
+        b2Polygon box = b2MakeBox((width*BLOCK_TEX_SCALE/BOX_SCALE)/2, (height*BLOCK_TEX_SCALE/BOX_SCALE)/2);
         b2ShapeId shape = b2CreatePolygonShape(wallBody, &shapeDef, &box);
 
         Entity e = Entity::create();
         e.addAll(
             Position{{}, 0},  // Still use top-left for rendering if needed
             Collider{wallBody},
-            Wall{shape, {RED_BLOCK.w, RED_BLOCK.h}},
+            Wall{shape, {width, height}},
             Drawable{RED_BLOCK, BLOCK_TEX_SCALE, true, false}
         );
         b2Body_SetUserData(wallBody, new ent_type{e.entity()});

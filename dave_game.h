@@ -189,7 +189,7 @@ namespace dave_game {
 
 
         void createDave(int startCol, int startRow);
-        void createWall(SDL_FPoint p) const;
+        void createWall(SDL_FPoint p, float width, float height) const;
         void createDiamond(SDL_FPoint p);
         void createDoor(SDL_FPoint p);
         void createTrophy(SDL_FPoint p);

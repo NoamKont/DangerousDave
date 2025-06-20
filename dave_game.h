@@ -173,6 +173,8 @@ namespace dave_game {
 
 
 
+
+
     class DaveGame {
 
         void prepareBoxWorld();
@@ -192,6 +194,7 @@ namespace dave_game {
         void CircularMotionSystem();
         void ShooterSystem();
         void BackAndForthMotionSystem();
+        void MenuInputSystem();
 
         void loadLevel(int level);
         void unloadLevel();
@@ -304,7 +307,8 @@ namespace dave_game {
         static constexpr SDL_FRect GHOST1{ 66, 520, 116, 120 };
         static constexpr SDL_FRect GHOST2{216, 520, 116, 120 };
 
-
+        static constexpr SDL_FRect LOGO{72, 668, 690, 207 };
+        static constexpr SDL_Point LOGO_POS{370, 80};
 
         static constexpr SDL_FRect SCORE_1{ 1671, 738, 40, 73 };
         static constexpr SDL_FRect SCORE_2{ 1740, 738, 60, 70 };
@@ -319,6 +323,7 @@ namespace dave_game {
         static constexpr SDL_FRect SCORE_0{ 1961, 842, 60, 68 };
 
         bool skipSensorEvents = false;
+
 
         static constexpr uint32_t DAVE_FIRE_COOLDOWN_MS = 1000;
         static constexpr uint32_t MONSTER_FIRE_COOLDOWN_MS = 3500;
@@ -661,6 +666,12 @@ namespace dave_game {
             }
         };
     public:
+        enum class GameState {
+            MENU,
+            PLAYING,
+            EXIT
+        };
+
         DaveGame();
         ~DaveGame();
 
@@ -668,5 +679,10 @@ namespace dave_game {
 
         void run();
         bool valid() const { return win != nullptr && ren != nullptr && tex != nullptr; }
+
+    private:
+        GameState m_gameState = GameState::MENU;
+        int m_selectedOption = 0;
+        const int m_optionCount = 2;
     };
 }

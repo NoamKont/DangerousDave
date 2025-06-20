@@ -18,16 +18,27 @@ namespace dave_game{
 
         while (!quit) {
 
-            InputSystem();
-            MovementSystem();
-            CircularMotionSystem();
-            BackAndForthMotionSystem();
-            ShooterSystem();
-            box_system();
-            CollisionSystem();
-            AnimationSystem();
-            StatusBarSystem();
-            RenderSystem();
+            if (m_gameState == GameState::MENU) {
+                MenuInputSystem();
+                if (m_gameState == GameState::EXIT) {
+                    quit = true;
+                }
+                else {
+                    RenderSystem();
+                }
+
+            } else if (m_gameState == GameState::PLAYING) {
+                InputSystem();
+                MovementSystem();
+                CircularMotionSystem();
+                BackAndForthMotionSystem();
+                ShooterSystem();
+                box_system();
+                CollisionSystem();
+                AnimationSystem();
+                StatusBarSystem();
+                RenderSystem();
+            }
 
             auto end = SDL_GetTicks();
             if (end-start < GAME_FRAME) {
@@ -124,6 +135,7 @@ namespace dave_game{
         SDL_PumpEvents();
         const bool* keys = SDL_GetKeyboardState(nullptr);
         uint32_t now = SDL_GetTicks();
+
         for (id_type id = 0; id <= World::maxId().id; ++id) {
             ent_type e{id};
             if (World::mask(e).test(required)) {
@@ -151,6 +163,39 @@ namespace dave_game{
             }
         }
     }
+
+    void DaveGame::MenuInputSystem() {
+        SDL_PumpEvents();
+        const bool* keys = SDL_GetKeyboardState(nullptr);
+
+        static uint32_t lastInput = 0;
+        uint32_t now = SDL_GetTicks();
+        const uint32_t INPUT_DELAY = 300;
+
+        if (now - lastInput >= INPUT_DELAY) {
+            if (keys[SDL_SCANCODE_UP]) {
+                m_selectedOption = (m_selectedOption + m_optionCount - 1) % m_optionCount;
+                lastInput = now;
+            }
+            if (keys[SDL_SCANCODE_DOWN]) {
+                m_selectedOption = (m_selectedOption + 1) % m_optionCount;
+                lastInput = now;
+            }
+            if (keys[SDL_SCANCODE_RETURN] || keys[SDL_SCANCODE_SPACE]) {
+                switch (m_selectedOption) {
+                    case 0:
+                        m_gameState = GameState::PLAYING;
+                        loadLevel(gameInfo.level); // start level 1
+                        break;
+                    case 1:
+                        m_gameState = GameState::EXIT;
+                        break;
+                }
+                lastInput = now;
+            }
+        }
+    }
+
     /// @brief Controls shooting of AI entities
     void DaveGame::ShooterSystem()
     {
@@ -580,6 +625,33 @@ namespace dave_game{
     /// Also checks optional components like Course, Collision, Gun, and Jetpack.
     void DaveGame::RenderSystem()
     {
+        if (m_gameState == GameState::MENU) {
+            SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+            SDL_RenderClear(ren);
+
+
+            SDL_FRect logoDest = {
+                LOGO_POS.x ,
+                LOGO_POS.y ,
+                LOGO.w * 2 ,
+                LOGO.h * 1.5
+            };
+            SDL_RenderTexture(ren, tex, &LOGO, &logoDest);
+
+            SDL_FRect optionRect = {
+                WIN_WIDTH / 4.0f,
+                WIN_HEIGHT / 2.0f + m_selectedOption * 60.0f,
+                WIN_WIDTH / 2.0f,
+                50.0f
+            };
+
+            SDL_SetRenderDrawColor(ren, 200, 0, 0, 255);
+            SDL_RenderFillRect(ren, &optionRect);
+
+            SDL_RenderPresent(ren);
+            return;
+        }
+
         MaskBuilder builder;
         builder.set<Position>().set<Drawable>();
         Mask required = builder.build();

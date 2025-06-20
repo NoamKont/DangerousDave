@@ -938,6 +938,7 @@ namespace dave_game{
         Position{center, 0},
         Drawable{MUSHROOM1, BLOCK_TEX_SCALE, true, false},
         Collider{mushroomBody},
+        Monster{},
         Animation{MUSHROOM_ANIMATION, 1, 8, 0, 0, Animation::Type::MUSHROOM}
     );
 
@@ -996,6 +997,7 @@ namespace dave_game{
         Position{center, 0},
         Drawable{GHOST1, BLOCK_TEX_SCALE, true, false},
         Collider{ghostBody},
+        Monster{},
         Animation{GHOST_ANIMATION, 1, 2, 0, 0, Animation::Type::GHOST}
     );
 

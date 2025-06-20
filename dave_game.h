@@ -35,7 +35,9 @@ namespace dave_game {
     using Animation = struct {
 
         enum class Type {
-            DAVE
+            DAVE,
+            MUSHROOM,
+            GHOST,
         };
 
         Drawable** states_frames;
@@ -187,8 +189,13 @@ namespace dave_game {
         void loadLevel(int level);
         void unloadLevel();
         void levelAnimation();
-
         void createMap(uint8_t* map, int width, int height);
+
+        void createMushroom(int startCol, int startRow);
+
+        void createGhost(int startCol, int startRow);
+
+
         void createDave(int startCol, int startRow);
         void createWall(SDL_FPoint p, float width, float height) const;
         void createDiamond(SDL_FPoint p);
@@ -278,6 +285,20 @@ namespace dave_game {
 
 
 
+        static constexpr SDL_FRect MUSHROOM1{ 1096, 179, 75, 120 };
+        static constexpr SDL_FRect MUSHROOM2{ 1294, 179, 75, 120 };
+        static constexpr SDL_FRect MUSHROOM3{ 1491, 179, 75, 120 };
+        static constexpr SDL_FRect MUSHROOM4{ 1688, 179, 75, 120 };
+        static constexpr SDL_FRect MUSHROOM5{ 1885, 179, 75, 120 };
+        static constexpr SDL_FRect MUSHROOM6{ 2082, 179, 75, 120 };
+        static constexpr SDL_FRect MUSHROOM7{ 2279, 179, 75, 120 };
+        static constexpr SDL_FRect MUSHROOM8{ 2476, 179, 75, 120 };
+
+        static constexpr SDL_FRect GHOST1{ 66, 520, 116, 120 };
+        static constexpr SDL_FRect GHOST2{216, 520, 116, 120 };
+
+
+
         static constexpr SDL_FRect SCORE_1{ 1671, 738, 40, 73 };
         static constexpr SDL_FRect SCORE_2{ 1740, 738, 60, 70 };
         static constexpr SDL_FRect SCORE_3{ 1808, 738, 60, 71 };
@@ -296,6 +317,7 @@ namespace dave_game {
         static constexpr uint32_t MONSTER_FIRE_COOLDOWN_MS = 2000;
         static constexpr uint32_t DAVE_JUMP_COOLDOWN_MS = 50;
 
+
         static constexpr int MAP_WIDTH = 20;
         static constexpr int MAP_HEIGHT = 10;
 
@@ -309,6 +331,8 @@ namespace dave_game {
         static constexpr float	ANIMATION_VELOCITY_THRESHOLD = 0.5f; // Velocity threshold to switch between animation states
 
         static inline  Drawable** DAVE_ANIMATION = nullptr;
+        static inline  Drawable** MUSHROOM_ANIMATION = nullptr;
+        static inline  Drawable** GHOST_ANIMATION = nullptr;
         static inline Drawable* NUMBERS_SPRITES = new Drawable[10] {
             { SCORE_0, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 0
             { SCORE_1, BLOCK_TEX_SCALE, true, false , true}, // Placeholder for index 1

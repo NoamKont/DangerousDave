@@ -127,6 +127,7 @@ namespace dave_game {
     /// @brief Marks whether Dave is on the ground
     struct GroundStatus {
         bool onGround = false;
+        uint32_t lastLandedTime = 0;
     };
 
     /// @brief Marks if the entity is a trophy
@@ -143,6 +144,7 @@ namespace dave_game {
     struct DoorLabel{};
     struct ScoreLabel{};
     struct LevelLabel{};
+    struct GunEquipedLabel{};
 
     struct LivesHead {
         int index;
@@ -185,9 +187,8 @@ namespace dave_game {
         void loadLevel(int level);
         void unloadLevel();
         void levelAnimation();
+
         void createMap(uint8_t* map, int width, int height);
-
-
         void createDave(int startCol, int startRow);
         void createWall(SDL_FPoint p, float width, float height) const;
         void createDiamond(SDL_FPoint p);
@@ -201,6 +202,7 @@ namespace dave_game {
         void createBullet(SDL_FPoint davePos, bool goingLeft);
         void createMonsterBullet(SDL_FPoint monsterPos, bool goingLeft);
 
+        ent_type getGunEquipedEntity();
 
         void createStatusBar();
         void createTitles();
@@ -290,8 +292,9 @@ namespace dave_game {
 
         bool skipSensorEvents = false;
 
-        static constexpr uint32_t COOLDOWN_MS = 1000;
-        static constexpr uint32_t MONSTER_COOLDOWN_MS = 2000;
+        static constexpr uint32_t DAVE_FIRE_COOLDOWN_MS = 1000;
+        static constexpr uint32_t MONSTER_FIRE_COOLDOWN_MS = 2000;
+        static constexpr uint32_t DAVE_JUMP_COOLDOWN_MS = 50;
 
         static constexpr int MAP_WIDTH = 20;
         static constexpr int MAP_HEIGHT = 10;
@@ -524,7 +527,7 @@ namespace dave_game {
             {
                 GRID_RED_BLOCK,
                 GRID_BACKGROUND,   GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
-                GRID_BACKGROUND,   GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK,
+                GRID_BACKGROUND,   GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
                 GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK, GRID_RED_BLOCK,
                 GRID_BACKGROUND, GRID_BACKGROUND, GRID_SENSOR_BACK, GRID_SENSOR_FORWARD,
                 GRID_BACKGROUND,
@@ -542,7 +545,7 @@ namespace dave_game {
             {
                 GRID_RED_BLOCK, GRID_BACKGROUND,
                 GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_BACKGROUND,
-                GRID_BACKGROUND,  GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+                GRID_BACKGROUND,  GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_BACKGROUND,
                 GRID_BACKGROUND,  GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND,
                 GRID_TROPHY,  GRID_RED_BLOCK, GRID_BACKGROUND, GRID_RED_BLOCK,
                 GRID_RED_BLOCK,  GRID_RED_BLOCK, GRID_RED_BLOCK,
@@ -578,7 +581,7 @@ namespace dave_game {
             {
                 GRID_RED_BLOCK,
                 GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
-                GRID_RED_BLOCK,  GRID_RED_BLOCK,  GRID_RED_BLOCK,  GRID_RED_BLOCK,
+                GRID_RED_BLOCK,  GRID_RED_BLOCK,  GRID_BACKGROUND,  GRID_BACKGROUND,
                 GRID_BACKGROUND, GRID_DIAMOND, GRID_RED_BLOCK, GRID_BACKGROUND,
                 GRID_BACKGROUND,  GRID_GUN,  GRID_RED_BLOCK,  GRID_BACKGROUND,
                 GRID_BACKGROUND,  GRID_DIAMOND,  GRID_DIAMOND,

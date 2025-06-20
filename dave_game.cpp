@@ -140,7 +140,7 @@ namespace dave_game{
 
                 if (keys[SDL_SCANCODE_SPACE] && World::mask(e).test(Component<Gun>::Bit)) {
                     auto& lastShot = World::getComponent<LastShot>(e);
-                    if (now - lastShot.time >= COOLDOWN_MS) {
+                    if (now - lastShot.time >= DAVE_FIRE_COOLDOWN_MS) {
                         const auto& pos = World::getComponent<Position>(e);
                         bool facingLeft = d.flip;
                         createBullet(pos.p, facingLeft);
@@ -167,7 +167,7 @@ namespace dave_game{
             auto& drawable = World::getComponent<Drawable>(e);
             auto& lastShot = World::getComponent<LastShot>(e);
 
-            if (now - lastShot.time >= MONSTER_COOLDOWN_MS) {
+            if (now - lastShot.time >= MONSTER_FIRE_COOLDOWN_MS) {
                 createMonsterBullet(pos.p, true);
                 lastShot.time = now;
             }
@@ -177,6 +177,8 @@ namespace dave_game{
     /// @brief Controls movement of all entities with Position and Course.
     void DaveGame::MovementSystem()
     {
+        const uint32_t now = SDL_GetTicks();
+
         static const Mask mask = MaskBuilder()
                    .set<Intent>()
                    .set<Collider>()
@@ -200,13 +202,13 @@ namespace dave_game{
                     auto& anim = World::getComponent<Animation>(e);
                     auto& groundStatus = World::getComponent<GroundStatus>(e);
 
-                    if (i.up && groundStatus.onGround) {
+                    if (i.up && groundStatus.onGround && (now - groundStatus.lastLandedTime >= DAVE_JUMP_COOLDOWN_MS)) {
 
-                        groundStatus.onGround = false;
-                        float jumpVelocity = 7.4f;
+                        float jumpVelocity = 9.f;
                         float mass = b2Body_GetMass(c.b);
                         b2Vec2 impulse = {0.0f, -mass * jumpVelocity};
                         b2Body_ApplyLinearImpulseToCenter(c.b, impulse, true);
+                        groundStatus.onGround = false;
                     }
 
                     if (vel.x >= -ANIMATION_VELOCITY_THRESHOLD && vel.x <= ANIMATION_VELOCITY_THRESHOLD && vel.y >= -ANIMATION_VELOCITY_THRESHOLD && vel.y <= ANIMATION_VELOCITY_THRESHOLD) {
@@ -214,7 +216,7 @@ namespace dave_game{
                         if (anim.currentState != 0) {
                             anim.currentState = 0; // IDLE
                             anim.currentFrame = 0;
-                            groundStatus.onGround = true;
+                            //groundStatus.onGround = true;
                         }
 
                     } else if (vel.y >= -ANIMATION_VELOCITY_THRESHOLD && vel.y <= ANIMATION_VELOCITY_THRESHOLD) {
@@ -222,7 +224,7 @@ namespace dave_game{
                         if (anim.currentState != 1) {
                             anim.currentState = 1; // WALK
                             anim.currentFrame = 0;
-                            groundStatus.onGround = true;
+                            //groundStatus.onGround = true;
                         }
                     }
                     else {
@@ -230,7 +232,7 @@ namespace dave_game{
                         if (anim.currentState != 2) {
                             anim.currentState = 2; // JUMP
                             anim.currentFrame = 0;
-                            groundStatus.onGround = false;
+                            //groundStatus.onGround = false;
                         }
                     }
                 }
@@ -296,9 +298,10 @@ namespace dave_game{
                 float daveBottom = davePos.p.y + (DAVE_JUMPING.h * DAVE_TEX_SCALE / 2);
                 float wallTop = wallPos.p.y - (RED_BLOCK.h * BLOCK_TEX_SCALE / 2);
 
-                if (daveBottom <= wallTop + 4.f) { // 4px margin to allow slight overlap
+                if (daveBottom <= wallTop + 8.f) {
                     auto& groundStatus = World::getComponent<GroundStatus>(*sensorEntity);
                     groundStatus.onGround = true;
+                    groundStatus.lastLandedTime = SDL_GetTicks();
                 }
             }
 
@@ -339,21 +342,28 @@ namespace dave_game{
                     EndGame();
                     break;// End game if no lives left
                 }
+
                 gameInfo.screenOffset = 0.f;
+                ent_type gunEquiped = getGunEquipedEntity();
+                if (gunEquiped.id != -1) {
+                    World::destroyEntity(gunEquiped);
+                }
+
                 World::destroyEntity(*sensorEntity);
                 b2DestroyBody(sensor);
                 createDave(DAVE_START_COLUMN, DAVE_START_ROW);
                 break;
             }
             else if (sensorIsDave && visitorIsGun) {
-                auto& gun = World::getComponent<Gun>(*visitorEntity);
+                //auto& gun = World::getComponent<Gun>(*visitorEntity);
                 World::destroyEntity(*visitorEntity);
                 b2DestroyBody(visitor);
 
                 auto gunEquipped = Entity::create();
                 gunEquipped.addAll(
                     Position{{0.5 * RED_BLOCK.w * BLOCK_TEX_SCALE, 11.5 * RED_BLOCK.h * BLOCK_TEX_SCALE}, 0},
-                    Drawable{GUN, BLOCK_TEX_SCALE, true, false, true}
+                    Drawable{GUN, BLOCK_TEX_SCALE, true, false, true},
+                    GunEquipedLabel{}
                 );
 
                 World::addComponent(*sensorEntity, Gun{});
@@ -1357,5 +1367,16 @@ namespace dave_game{
         }
 
         b2Body_SetUserData(monsterBody, new ent_type{monster.entity()});
+    }
+
+    ent_type DaveGame::getGunEquipedEntity() {
+        for (int i = 0; i <= World::maxId().id; ++i) {
+            ent_type e{i};
+            if (World::mask(e).test(Component<GunEquipedLabel>::Bit)) {
+                return e;
+            }
+        }
+
+        return ent_type{-1};
     }
 }

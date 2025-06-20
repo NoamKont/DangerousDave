@@ -431,11 +431,11 @@ namespace dave_game{
             };
 
             //createBatMonster(batMonsterSpawnPoint, true);
+            //createMushroom(DAVE_START_COLUMN + 1, DAVE_START_ROW);
+            //createGhost(DAVE_START_COLUMN + 2, DAVE_START_ROW);
             createMap(&map_stage2[0][0], MAP_WIDTH * 2, MAP_HEIGHT);
             cout << "Loaded map of level: " << level << endl;
-            //createDave(DAVE_START_COLUMN, DAVE_START_ROW);
-            createMushroom(DAVE_START_COLUMN, DAVE_START_ROW);
-            createGhost(DAVE_START_COLUMN + 2, DAVE_START_ROW);
+            createDave(DAVE_START_COLUMN, DAVE_START_ROW);
             cout << "create dave in level " << level << endl;
             createStatusBar();
             cout << "create status bar in level " << level << endl;

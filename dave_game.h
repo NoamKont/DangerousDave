@@ -90,6 +90,12 @@ namespace dave_game {
     */
     struct Background { };
 
+    struct BackAndForthMotion {
+        SDL_FPoint direction;
+        float speed = 60.0f;
+    };
+
+
 
     /// @brief Indicates that the entity has a gun and can shoot.
     struct Gun {};
@@ -185,6 +191,7 @@ namespace dave_game {
         void box_system();
         void CircularMotionSystem();
         void ShooterSystem();
+        void BackAndForthMotionSystem();
 
         void loadLevel(int level);
         void unloadLevel();
@@ -314,7 +321,7 @@ namespace dave_game {
         bool skipSensorEvents = false;
 
         static constexpr uint32_t DAVE_FIRE_COOLDOWN_MS = 1000;
-        static constexpr uint32_t MONSTER_FIRE_COOLDOWN_MS = 2000;
+        static constexpr uint32_t MONSTER_FIRE_COOLDOWN_MS = 3500;
         static constexpr uint32_t DAVE_JUMP_COOLDOWN_MS = 50;
 
 
@@ -570,8 +577,8 @@ namespace dave_game {
                 GRID_RED_BLOCK, GRID_BACKGROUND,
                 GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_BACKGROUND,
                 GRID_BACKGROUND,  GRID_RED_BLOCK, GRID_RED_BLOCK, GRID_BACKGROUND,
-                GRID_BACKGROUND,  GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND,
-                GRID_TROPHY,  GRID_RED_BLOCK, GRID_BACKGROUND, GRID_RED_BLOCK,
+                GRID_BACKGROUND,  GRID_RED_BLOCK, GRID_TROPHY, GRID_BACKGROUND,
+                GRID_BACKGROUND,  GRID_RED_BLOCK, GRID_BACKGROUND, GRID_RED_BLOCK,
                 GRID_RED_BLOCK,  GRID_RED_BLOCK, GRID_RED_BLOCK,
 
                 // repeat

@@ -21,6 +21,7 @@ namespace dave_game{
             InputSystem();
             MovementSystem();
             CircularMotionSystem();
+            BackAndForthMotionSystem();
             ShooterSystem();
             box_system();
             CollisionSystem();
@@ -279,6 +280,7 @@ namespace dave_game{
 
             bool sensorIsDave = World::mask(*sensorEntity).test(Component<Dave>::Bit);
             bool sensorIsBullet = World::mask(*sensorEntity).test(Component<Bullet>::Bit);
+            bool sensorBackAndForthEnt = World::mask(*sensorEntity).test(Component<BackAndForthMotion>::Bit);
 
             bool visitorIsWall = World::mask(*visitorEntity).test(Component<Wall>::Bit);
             bool visitorIsDiamond = World::mask(*visitorEntity).test(Component<Diamond>::Bit);
@@ -388,8 +390,19 @@ namespace dave_game{
                     break;
                 }
             }
+            else if (sensorBackAndForthEnt && visitorIsWall) {
+                const auto& monsterPos = World::getComponent<Position>(*sensorEntity);
+                const auto& wallPos = World::getComponent<Position>(*visitorEntity);
 
+                // Check for side collision (horizontal overlap, vertical alignment)
+                float dx = fabs(monsterPos.p.x - wallPos.p.x);
+                float dy = fabs(monsterPos.p.y - wallPos.p.y);
 
+                if (dx > dy) { // mostly side collision
+                    auto& motion = World::getComponent<BackAndForthMotion>(*sensorEntity);
+                    motion.direction.x *= -1; // flip horizontal direction
+                }
+            }
         }
     }
 
@@ -440,9 +453,9 @@ namespace dave_game{
                 BAT_MONSTER_START_ROW * RED_BLOCK.h * BLOCK_TEX_SCALE
             };
 
-            //createBatMonster(batMonsterSpawnPoint, true);
-            //createMushroom(DAVE_START_COLUMN + 1, DAVE_START_ROW);
-            //createGhost(DAVE_START_COLUMN + 2, DAVE_START_ROW);
+            createBatMonster(batMonsterSpawnPoint, true);
+            createMushroom(DAVE_START_COLUMN + 7, DAVE_START_ROW);
+            createGhost(DAVE_START_COLUMN + 11, DAVE_START_ROW);
             createMap(&map_stage2[0][0], MAP_WIDTH * 2, MAP_HEIGHT);
             cout << "Loaded map of level: " << level << endl;
             createDave(DAVE_START_COLUMN, DAVE_START_ROW);
@@ -969,7 +982,7 @@ namespace dave_game{
     };
 
     b2BodyDef ghostBodyDef = b2DefaultBodyDef();
-    ghostBodyDef.type = b2_dynamicBody;
+    ghostBodyDef.type = b2_kinematicBody;
     ghostBodyDef.position = {
         center.x / BOX_SCALE,
         center.y / BOX_SCALE
@@ -981,6 +994,7 @@ namespace dave_game{
     b2ShapeDef ghostShapeDef = b2DefaultShapeDef();
     ghostShapeDef.density = 20.f;
     ghostShapeDef.enableSensorEvents = true;
+    ghostShapeDef.isSensor = true;
     b2SurfaceMaterial mat = {
         .friction = 0.0f,
         .restitution = 0.0f,
@@ -1008,12 +1022,14 @@ namespace dave_game{
         Drawable{GHOST1, BLOCK_TEX_SCALE, true, false},
         Collider{ghostBody},
         Monster{},
-        Animation{GHOST_ANIMATION, 1, 2, 0, 0, Animation::Type::GHOST}
+        Animation{GHOST_ANIMATION, 1, 2, 0, 0, Animation::Type::GHOST},
+        BackAndForthMotion{{1.f, 0.f}, 60.f}
     );
 
     b2Body_SetUserData(ghostBody, new ent_type{e.entity()});
     std::cout << "GHOST entity created with ID: " << e.entity().id << std::endl;
     }
+
     void DaveGame::createBlock(SDL_FPoint p,SDL_FRect r) {
         SDL_FPoint center = {
             p.x + r.w * BLOCK_TEX_SCALE / 2.0f,
@@ -1503,5 +1519,27 @@ namespace dave_game{
         }
 
         return ent_type{-1};
+    }
+
+    void DaveGame::BackAndForthMotionSystem() {
+        static const Mask mask = MaskBuilder()
+            .set<BackAndForthMotion>()
+            .set<Position>()
+            .set<Collider>()
+            .build();
+
+        for (ent_type e{0}; e.id <= World::maxId().id; ++e.id) {
+            if (World::mask(e).test(mask)) {
+                auto& motion = World::getComponent<BackAndForthMotion>(e);
+                auto& collider = World::getComponent<Collider>(e);
+
+                b2Vec2 velocity = {
+                    motion.direction.x * motion.speed / BOX_SCALE,
+                    motion.direction.y * motion.speed / BOX_SCALE
+                };
+
+                b2Body_SetLinearVelocity(collider.b, velocity);
+            }
+        }
     }
 }

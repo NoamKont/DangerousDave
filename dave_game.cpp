@@ -433,7 +433,9 @@ namespace dave_game{
             //createBatMonster(batMonsterSpawnPoint, true);
             createMap(&map_stage2[0][0], MAP_WIDTH * 2, MAP_HEIGHT);
             cout << "Loaded map of level: " << level << endl;
-            createDave(DAVE_START_COLUMN, DAVE_START_ROW);
+            //createDave(DAVE_START_COLUMN, DAVE_START_ROW);
+            createMushroom(DAVE_START_COLUMN, DAVE_START_ROW);
+            createGhost(DAVE_START_COLUMN + 2, DAVE_START_ROW);
             cout << "create dave in level " << level << endl;
             createStatusBar();
             cout << "create status bar in level " << level << endl;
@@ -879,6 +881,127 @@ namespace dave_game{
         }
     }
 
+    void DaveGame::createMushroom(int startCol, int startRow)
+    {
+    SDL_FPoint topLeft = {
+        startCol * RED_BLOCK.w * BLOCK_TEX_SCALE,
+        startRow * RED_BLOCK.h * BLOCK_TEX_SCALE
+    };
+
+    SDL_FPoint center = {
+        topLeft.x + MUSHROOM1.w * BLOCK_TEX_SCALE / 2.0f,
+        topLeft.y + MUSHROOM1.h * BLOCK_TEX_SCALE/ 2.0f
+    };
+
+    b2BodyDef mushroomBodyDef = b2DefaultBodyDef();
+    mushroomBodyDef.type = b2_dynamicBody;
+    mushroomBodyDef.position = {
+        center.x / BOX_SCALE,
+        center.y / BOX_SCALE
+    };
+    mushroomBodyDef.fixedRotation = true;
+    b2BodyId mushroomBody = b2CreateBody(boxWorld, &mushroomBodyDef);
+
+
+    b2ShapeDef mushroomShapeDef = b2DefaultShapeDef();
+    mushroomShapeDef.density = 20.f;
+    mushroomShapeDef.enableSensorEvents = true;
+    b2SurfaceMaterial mat = {
+        .friction = 0.0f,
+        .restitution = 0.0f,
+        .rollingResistance = 0.0f,
+        .tangentSpeed = 0.0f,
+        .userMaterialId = 0,
+        .customColor = 0  // Or 0xFFFFFFFF if you want to debug
+    };
+    mushroomShapeDef.material = mat;
+    b2Polygon mushroomBox = b2MakeBox(
+        (MUSHROOM1.w * BLOCK_TEX_SCALE / BOX_SCALE) / 2,
+        (MUSHROOM1.h * BLOCK_TEX_SCALE / BOX_SCALE) / 2
+    );
+    b2CreatePolygonShape(mushroomBody, &mushroomShapeDef, &mushroomBox);
+    // Set up animation frames
+    MUSHROOM_ANIMATION = new Drawable*[1]{
+        new Drawable[8]{ // Walking
+            {MUSHROOM1, BLOCK_TEX_SCALE, true, false},
+            {MUSHROOM2, BLOCK_TEX_SCALE, true, false},
+            {MUSHROOM3, BLOCK_TEX_SCALE, true, false},
+            {MUSHROOM4, BLOCK_TEX_SCALE, true, false},
+            {MUSHROOM5, BLOCK_TEX_SCALE, true, false},
+            {MUSHROOM6, BLOCK_TEX_SCALE, true, false},
+            {MUSHROOM7, BLOCK_TEX_SCALE, true, false},
+            {MUSHROOM8, BLOCK_TEX_SCALE, true, false}
+        }
+    };
+    Entity e = Entity::create();
+    e.addAll(
+        Position{center, 0},
+        Drawable{MUSHROOM1, BLOCK_TEX_SCALE, true, false},
+        Collider{mushroomBody},
+        Animation{MUSHROOM_ANIMATION, 1, 8, 0, 0, Animation::Type::MUSHROOM}
+    );
+
+    b2Body_SetUserData(mushroomBody, new ent_type{e.entity()});
+    std::cout << "Mushroom entity created with ID: " << e.entity().id << std::endl;
+    }
+
+    void DaveGame::createGhost(int startCol, int startRow)
+    {
+    SDL_FPoint topLeft = {
+        startCol * RED_BLOCK.w * BLOCK_TEX_SCALE,
+        startRow * RED_BLOCK.h * BLOCK_TEX_SCALE
+    };
+
+    SDL_FPoint center = {
+        topLeft.x + GHOST1.w * BLOCK_TEX_SCALE / 2.0f,
+        topLeft.y + GHOST1.h * BLOCK_TEX_SCALE/ 2.0f
+    };
+
+    b2BodyDef ghostBodyDef = b2DefaultBodyDef();
+    ghostBodyDef.type = b2_dynamicBody;
+    ghostBodyDef.position = {
+        center.x / BOX_SCALE,
+        center.y / BOX_SCALE
+    };
+    ghostBodyDef.fixedRotation = true;
+    b2BodyId ghostBody = b2CreateBody(boxWorld, &ghostBodyDef);
+
+
+    b2ShapeDef ghostShapeDef = b2DefaultShapeDef();
+    ghostShapeDef.density = 20.f;
+    ghostShapeDef.enableSensorEvents = true;
+    b2SurfaceMaterial mat = {
+        .friction = 0.0f,
+        .restitution = 0.0f,
+        .rollingResistance = 0.0f,
+        .tangentSpeed = 0.0f,
+        .userMaterialId = 0,
+        .customColor = 0  // Or 0xFFFFFFFF if you want to debug
+    };
+    ghostShapeDef.material = mat;
+    b2Polygon ghostBox = b2MakeBox(
+        (GHOST1.w * BLOCK_TEX_SCALE / BOX_SCALE) / 2,
+        (GHOST1.h * BLOCK_TEX_SCALE / BOX_SCALE) / 2
+    );
+    b2CreatePolygonShape(ghostBody, &ghostShapeDef, &ghostBox);
+    // Set up animation frames
+    GHOST_ANIMATION = new Drawable*[1]{
+        new Drawable[2]{ // Walking
+            {GHOST1, BLOCK_TEX_SCALE, true, false},
+            {GHOST2, BLOCK_TEX_SCALE, true, false}
+        }
+    };
+    Entity e = Entity::create();
+    e.addAll(
+        Position{center, 0},
+        Drawable{GHOST1, BLOCK_TEX_SCALE, true, false},
+        Collider{ghostBody},
+        Animation{GHOST_ANIMATION, 1, 2, 0, 0, Animation::Type::GHOST}
+    );
+
+    b2Body_SetUserData(ghostBody, new ent_type{e.entity()});
+    std::cout << "GHOST entity created with ID: " << e.entity().id << std::endl;
+    }
     void DaveGame::createBlock(SDL_FPoint p,SDL_FRect r) {
         SDL_FPoint center = {
             p.x + r.w * BLOCK_TEX_SCALE / 2.0f,

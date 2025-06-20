@@ -587,8 +587,6 @@ namespace dave_game{
                          const Wall& wall = World::getComponent<Wall>(e); // stores shape ID
                          w = wall.size.x * BLOCK_TEX_SCALE;
                          h = wall.size.y * BLOCK_TEX_SCALE;
-                         // w = RED_BLOCK.w * BLOCK_TEX_SCALE; // back to pixels
-                         // h = RED_BLOCK.h * BLOCK_TEX_SCALE;
                      }else if ( World::mask(e).test(Component<Monster>::Bit)) {
                          w = BAT_MONSTER_1.w * BLOCK_TEX_SCALE; // back to pixels
                          h = BAT_MONSTER_1.h * BLOCK_TEX_SCALE;
@@ -617,6 +615,24 @@ namespace dave_game{
             {
                 continue; // Skip rendering if not visible
             }
+
+            if (World::mask(e).test(Component<Wall>::Bit)) {
+                auto& wall = World::getComponent<Wall>(e);
+                const SDL_FRect dst = {
+                    pos.p.x - (wall.size.x * drawable.scale / 2) - (gameInfo.screenOffset * (!drawable.isStatic) * WIN_WIDTH),
+                    pos.p.y - (wall.size.y * drawable.scale / 2),
+                    drawable.part.w * drawable.scale,
+                    drawable.part.h * drawable.scale
+                };
+                int tilesNum = wall.size.x / RED_BLOCK.w ;
+
+                for (int j = 0; j < tilesNum; ++j) {
+                    SDL_FRect tileDst = dst;
+                    tileDst.x += j * RED_BLOCK.w * BLOCK_TEX_SCALE;
+                    SDL_RenderTextureRotated(ren, tex, &drawable.part, &tileDst, 0, nullptr, SDL_FLIP_NONE);
+                }
+            }
+            else {
             const SDL_FRect dst = {
                 pos.p.x - (drawable.part.w * drawable.scale / 2) - (gameInfo.screenOffset * (!drawable.isStatic) * WIN_WIDTH),
                 pos.p.y - (drawable.part.h * drawable.scale / 2),
@@ -629,6 +645,7 @@ namespace dave_game{
             SDL_RenderTextureRotated(
                 ren, tex, &drawable.part, &dst, 0,
                 nullptr, flip);
+            }
         }
         SDL_RenderPresent(ren);
     }

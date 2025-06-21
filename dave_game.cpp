@@ -18,40 +18,45 @@ namespace dave_game{
 
         while (!quit) {
 
-            if (m_gameState == GameState::MENU) {
-                MenuInputSystem();
-                if (m_gameState == GameState::EXIT) {
-                    quit = true;
-                }
-                else {
+            switch ((GameState)m_gameState) {
+                case GameState::MENU:
+                    MenuInputSystem();
+                    if (!((GameState)m_gameState == GameState::EXIT)) {
+                        RenderSystem();
+                    }
+                    break;
+                case GameState::PLAYING:
+                    InputSystem();
+                    MovementSystem();
+                    CircularMotionSystem();
+                    BackAndForthMotionSystem();
+                    ShooterSystem();
+                    box_system();
+                    CollisionSystem();
+                    AnimationSystem();
+                    StatusBarSystem();
                     RenderSystem();
-                }
+                    break;
+                case GameState::EXIT:
+                    quit = true;
+                    break;
+                default:
+                    break;
 
-            } else if (m_gameState == GameState::PLAYING) {
-                InputSystem();
-                MovementSystem();
-                CircularMotionSystem();
-                BackAndForthMotionSystem();
-                ShooterSystem();
-                box_system();
-                CollisionSystem();
-                AnimationSystem();
-                StatusBarSystem();
-                RenderSystem();
             }
 
             auto end = SDL_GetTicks();
             if (end-start < GAME_FRAME) {
                 SDL_Delay(GAME_FRAME - (end-start));
             }
-            start += GAME_FRAME;
 
+            start += GAME_FRAME;
             SDL_Event e;
             while (SDL_PollEvent(&e)) {
                 if (e.type == SDL_EVENT_QUIT)
-                    quit = true;
+                    m_gameState = GameState::EXIT;
                 else if ((e.type == SDL_EVENT_KEY_DOWN) && (e.key.scancode == SDL_SCANCODE_ESCAPE))
-                    quit = true;
+                    m_gameState = GameState::MENU;
             }
         }
     }
@@ -185,7 +190,7 @@ namespace dave_game{
                 switch (m_selectedOption) {
                     case 0:
                         m_gameState = GameState::PLAYING;
-                        loadLevel(gameInfo.level); // start level 1
+                        loadLevel(gameInfo.level);
                         break;
                     case 1:
                         m_gameState = GameState::EXIT;
@@ -626,52 +631,7 @@ namespace dave_game{
     void DaveGame::RenderSystem()
     {
         if (m_gameState == GameState::MENU) {
-            SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-            SDL_RenderClear(ren);
-
-            SDL_FRect logoDest = {
-                LOGO_POS.x ,
-                LOGO_POS.y ,
-                LOGO.w ,
-                LOGO.h
-            };
-            SDL_RenderTexture(ren, tex, &LOGO, &logoDest);
-            if (m_selectedOption == (int)MenuOptions::START_GAME) {
-                SDL_FRect startGameSelectedDest = {
-                    START_GAME_POS.x ,
-                    START_GAME_POS.y,
-                    START_GAME_SELECTED.w ,
-                    START_GAME_SELECTED.h
-                };
-                SDL_RenderTexture(ren, tex, &START_GAME_SELECTED, &startGameSelectedDest);
-
-                SDL_FRect exitDest = {
-                    EXIT_POS.x ,
-                    EXIT_POS.y,
-                    EXIT.w ,
-                    EXIT.h
-                };
-                SDL_RenderTexture(ren, tex, &EXIT, &exitDest);
-            }
-            else {
-                SDL_FRect startGameDest = {
-                    START_GAME_POS.x ,
-                    START_GAME_POS.y,
-                    START_GAME.w ,
-                    START_GAME.h
-                };
-                SDL_RenderTexture(ren, tex, &START_GAME, &startGameDest);
-
-                SDL_FRect exitSelectedDest = {
-                    EXIT_POS.x ,
-                    EXIT_POS.y,
-                    EXIT_SELECTED.w ,
-                    EXIT_SELECTED.h
-                };
-                SDL_RenderTexture(ren, tex, &EXIT_SELECTED, &exitSelectedDest);
-            }
-
-            SDL_RenderPresent(ren);
+            renderMenuOptions();
             return;
         }
 
@@ -1636,5 +1596,62 @@ namespace dave_game{
                 b2Body_SetLinearVelocity(collider.b, velocity);
             }
         }
+    }
+
+    void DaveGame::renderMenuOptions() {
+        SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+        SDL_RenderClear(ren);
+
+        SDL_FRect logoDest = {
+            LOGO_POS.x ,
+            LOGO_POS.y ,
+            LOGO.w ,
+            LOGO.h
+        };
+        SDL_RenderTexture(ren, tex, &LOGO, &logoDest);
+
+        switch (MenuOptions(m_selectedOption)) {
+            case MenuOptions::EXIT: {
+                SDL_FRect startGameDest = {
+                    START_GAME_POS.x ,
+                    START_GAME_POS.y,
+                    START_GAME.w ,
+                    START_GAME.h
+                    };
+                SDL_RenderTexture(ren, tex, &START_GAME, &startGameDest);
+
+                SDL_FRect exitSelectedDest = {
+                    EXIT_POS.x ,
+                    EXIT_POS.y,
+                    EXIT_SELECTED.w ,
+                    EXIT_SELECTED.h
+                };
+                SDL_RenderTexture(ren, tex, &EXIT_SELECTED, &exitSelectedDest);
+                break;
+            }
+            case MenuOptions::START_GAME: {
+                SDL_FRect startGameSelectedDest = {
+                    START_GAME_POS.x ,
+                    START_GAME_POS.y,
+                    START_GAME_SELECTED.w ,
+                    START_GAME_SELECTED.h
+                };
+                SDL_RenderTexture(ren, tex, &START_GAME_SELECTED, &startGameSelectedDest);
+
+                SDL_FRect exitDest = {
+                    EXIT_POS.x ,
+                    EXIT_POS.y,
+                    EXIT.w ,
+                    EXIT.h
+                };
+                SDL_RenderTexture(ren, tex, &EXIT, &exitDest);
+                break;
+            }
+            default:
+                std::cout << "Unknown option: " << m_selectedOption << std::endl;
+                break;
+        }
+
+        SDL_RenderPresent(ren);
     }
 }

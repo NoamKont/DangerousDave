@@ -219,7 +219,7 @@ namespace dave_game {
         void createMonsterBullet(SDL_FPoint monsterPos, bool goingLeft);
 
         ent_type getGunEquipedEntity();
-        void renderText(const char* text, SDL_FRect& destRect);
+        void renderMenuOptions();
 
         void createStatusBar();
         void createTitles();

@@ -180,15 +180,11 @@ namespace dave_game {
         void prepareBoxWorld();
 
         void MovementSystem();
-
         void renderGoThruTheDoor();
-
         void CollisionSystem();
         void RenderSystem();
         void InputSystem();
         void StatusBarSystem();
-        void CollectSystem();
-        void DeathSystem();
         void AnimationSystem();
         void box_system();
         void CircularMotionSystem();
@@ -202,12 +198,10 @@ namespace dave_game {
         void createMap(uint8_t* map, int width, int height);
 
         void createMushroom(int startCol, int startRow);
-
         void createGhost(int startCol, int startRow);
-
         void createDave(int startCol, int startRow);
         void createWall(SDL_FPoint p, float width, float height) const;
-        void createDiamond(SDL_FPoint p);
+        void createDiamond(SDL_FPoint p, SDL_FRect diamond,int value);
         void createDoor(SDL_FPoint p);
         void createTrophy(SDL_FPoint p);
         void createSpikes(SDL_FPoint p);
@@ -230,31 +224,6 @@ namespace dave_game {
         void EndGame();
 
 
-
-        // static constexpr SDL_FRect RED_BLOCK {86,380,11,11};
-        // static constexpr SDL_FRect DAVE_HEALTH{ 1, 213, 8, 9 };
-        // static constexpr SDL_FRect SCORE_SPRITE{192, 214, 39, 7};
-        // static constexpr SDL_FRect LEVEL_SPRITE{146, 214, 33, 7};
-        // static constexpr SDL_FRect HEALTH_SPRITE{102, 214, 37, 7};
-
-        // static constexpr SDL_FRect DAVE_STANDING{ 5, 13, 8, 16 };
-        // static constexpr SDL_FRect DAVE_WALKING_1{27,13,12,16};
-        // static constexpr SDL_FRect DAVE_WALKING_2{78,13,12,16};
-        // static constexpr SDL_FRect DAVE_IDLE{ 155, 13, 7, 16 };
-        // static constexpr SDL_FRect DAVE_JUMPING{127,13,13,14};
-        //
-        // static constexpr SDL_FRect SCORE_0{ 294, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_1{ 237, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_2{ 243, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_3{ 250, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_4{ 256, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_5{ 262, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_6{ 269, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_7{ 275, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_8{ 282, 214, 6, 7 };
-        // static constexpr SDL_FRect SCORE_9{ 288, 214, 6, 7 };
-
-        //static constexpr float	BOX_SCALE = 64.f;
         static constexpr float	BOX_SCALE = 35.5f;
         static constexpr float	DAVE_TEX_SCALE = 0.42f;
         static constexpr float	BLOCK_TEX_SCALE = 0.56f;
@@ -275,11 +244,11 @@ namespace dave_game {
         static constexpr SDL_FRect BAT_MONSTER_1{840,521,122,113};
         static constexpr SDL_FRect BAT_MONSTER_2{683,521,147,111};
 
-        static constexpr SDL_FRect DIAMOND{ 231, 370, 118, 118 };
+        static constexpr SDL_FRect RED_BLOCK{ 221, 218, 118, 118 };
+        static constexpr SDL_FRect DIAMOND{ 231, 370, 118, 117 };
         static constexpr SDL_FRect RED_DIAMOND{ 75, 370, 118, 118 };
         static constexpr SDL_FRect DOOR{ 525, 366, 118, 118 };
         static constexpr SDL_FRect TROPHY{ 373, 370, 118, 118 };
-        static constexpr SDL_FRect RED_BLOCK{ 221, 218, 118, 118 };
         static constexpr SDL_FRect GUN{ 1396, 890, 118, 118 };
         static constexpr SDL_FRect BULLET{ 1538, 917, 53, 24 };
         static constexpr SDL_FRect MONSTER_BULLET{ 1535, 966, 53, 24 };
@@ -392,6 +361,8 @@ namespace dave_game {
         static constexpr uint8_t GRID_SKY = 8;
         static constexpr uint8_t GRID_SAND = 9;
         static constexpr uint8_t GRID_GUN = 10;
+        static constexpr uint8_t GRID_RED_DIAMOND = 11;
+
 
         static constexpr int SCORE_DIGITS_COUNT = 5;
 
@@ -488,7 +459,7 @@ namespace dave_game {
             /* row 8 */
             { GRID_RED_BLOCK, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
               GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
-              GRID_BACKGROUND, GRID_DOOR, GRID_RED_BLOCK, GRID_DOOR, GRID_BACKGROUND,
+              GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK, GRID_DOOR, GRID_BACKGROUND,
               GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_RED_BLOCK },
 
             /* row 9 (bottom border) */
@@ -517,7 +488,7 @@ namespace dave_game {
             // row 1
             {
                 GRID_RED_BLOCK,
-                GRID_DIAMOND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
+                GRID_RED_DIAMOND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
                 GRID_BACKGROUND, GRID_BACKGROUND, GRID_DIAMOND, GRID_BACKGROUND, GRID_BACKGROUND,
                 GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND, GRID_BACKGROUND,
                 GRID_BACKGROUND, GRID_BACKGROUND, GRID_SENSOR_BACK, GRID_SENSOR_FORWARD,

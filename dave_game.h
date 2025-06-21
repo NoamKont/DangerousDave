@@ -205,7 +205,6 @@ namespace dave_game {
 
         void createGhost(int startCol, int startRow);
 
-
         void createDave(int startCol, int startRow);
         void createWall(SDL_FPoint p, float width, float height) const;
         void createDiamond(SDL_FPoint p);
@@ -220,6 +219,7 @@ namespace dave_game {
         void createMonsterBullet(SDL_FPoint monsterPos, bool goingLeft);
 
         ent_type getGunEquipedEntity();
+        void renderText(const char* text, SDL_FRect& destRect);
 
         void createStatusBar();
         void createTitles();
@@ -308,7 +308,16 @@ namespace dave_game {
         static constexpr SDL_FRect GHOST2{216, 520, 116, 120 };
 
         static constexpr SDL_FRect LOGO{72, 668, 690, 207 };
-        static constexpr SDL_Point LOGO_POS{370, 80};
+        static constexpr SDL_Point LOGO_POS{308, 80};
+
+        static constexpr SDL_FRect START_GAME{2096, 700, 300, 120 };
+        static constexpr SDL_FRect EXIT{2097, 428, 300, 120 };
+        static constexpr SDL_FRect START_GAME_SELECTED{2096, 835, 300, 120 };
+        static constexpr SDL_FRect EXIT_SELECTED{2096, 558, 300, 120 };
+
+
+        static constexpr SDL_Point START_GAME_POS{503, 400};
+        static constexpr SDL_Point EXIT_POS{503, 600};
 
         static constexpr SDL_FRect SCORE_1{ 1671, 738, 40, 73 };
         static constexpr SDL_FRect SCORE_2{ 1740, 738, 60, 70 };
@@ -669,6 +678,10 @@ namespace dave_game {
         enum class GameState {
             MENU,
             PLAYING,
+            EXIT
+        };
+        enum class MenuOptions {
+            START_GAME,
             EXIT
         };
 

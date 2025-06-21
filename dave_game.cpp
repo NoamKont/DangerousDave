@@ -629,24 +629,47 @@ namespace dave_game{
             SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
             SDL_RenderClear(ren);
 
-
             SDL_FRect logoDest = {
                 LOGO_POS.x ,
                 LOGO_POS.y ,
-                LOGO.w * 2 ,
-                LOGO.h * 1.5
+                LOGO.w ,
+                LOGO.h
             };
             SDL_RenderTexture(ren, tex, &LOGO, &logoDest);
+            if (m_selectedOption == (int)MenuOptions::START_GAME) {
+                SDL_FRect startGameSelectedDest = {
+                    START_GAME_POS.x ,
+                    START_GAME_POS.y,
+                    START_GAME_SELECTED.w ,
+                    START_GAME_SELECTED.h
+                };
+                SDL_RenderTexture(ren, tex, &START_GAME_SELECTED, &startGameSelectedDest);
 
-            SDL_FRect optionRect = {
-                WIN_WIDTH / 4.0f,
-                WIN_HEIGHT / 2.0f + m_selectedOption * 60.0f,
-                WIN_WIDTH / 2.0f,
-                50.0f
-            };
+                SDL_FRect exitDest = {
+                    EXIT_POS.x ,
+                    EXIT_POS.y,
+                    EXIT.w ,
+                    EXIT.h
+                };
+                SDL_RenderTexture(ren, tex, &EXIT, &exitDest);
+            }
+            else {
+                SDL_FRect startGameDest = {
+                    START_GAME_POS.x ,
+                    START_GAME_POS.y,
+                    START_GAME.w ,
+                    START_GAME.h
+                };
+                SDL_RenderTexture(ren, tex, &START_GAME, &startGameDest);
 
-            SDL_SetRenderDrawColor(ren, 200, 0, 0, 255);
-            SDL_RenderFillRect(ren, &optionRect);
+                SDL_FRect exitSelectedDest = {
+                    EXIT_POS.x ,
+                    EXIT_POS.y,
+                    EXIT_SELECTED.w ,
+                    EXIT_SELECTED.h
+                };
+                SDL_RenderTexture(ren, tex, &EXIT_SELECTED, &exitSelectedDest);
+            }
 
             SDL_RenderPresent(ren);
             return;

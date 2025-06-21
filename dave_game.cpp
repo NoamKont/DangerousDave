@@ -368,7 +368,6 @@ namespace dave_game{
                 if (door.open) {
                     //levelAnimation();
                     loadLevel(++gameInfo.level);
-                    std::cout << "finish load new level: " << std::endl;
                     break;
                 }
             }
@@ -392,7 +391,8 @@ namespace dave_game{
                 gameInfo.lives--;
                 if (gameInfo.lives <= 0) {
                     EndGame();
-                    break;// End game if no lives left
+                    m_gameState = GameState::MENU;
+                    break;
                 }
 
                 gameInfo.screenOffset = 0.f;
@@ -448,9 +448,7 @@ namespace dave_game{
                     Drawable& d = World::getComponent<Drawable>(*sensorEntity);
                     b2Vec2 velocity = b2Body_GetLinearVelocity(c.b);
                     b2Body_SetLinearVelocity(c.b, {-velocity.x, 0.f});
-                    cout<< "Direction :" << d.flip << endl;
                     d.flip = !d.flip;
-                    cout<< "New direction :" << d.flip << endl;
                     break;
                 }
 
@@ -518,15 +516,11 @@ namespace dave_game{
             createMushroom(DAVE_START_COLUMN + 7, DAVE_START_ROW);
             //createGhost(DAVE_START_COLUMN + 11, DAVE_START_ROW);
             createMap(&map_stage2[0][0], MAP_WIDTH * 2, MAP_HEIGHT);
-            cout << "Loaded map of level: " << level << endl;
             createDave(DAVE_START_COLUMN, DAVE_START_ROW);
-            cout << "create dave in level " << level << endl;
             createStatusBar();
-            cout << "create status bar in level " << level << endl;
         } else {
-            cout << "Invalid level: " << level << endl;
             EndGame();
-            return;
+            m_gameState = GameState::MENU;
         }
     }
 
@@ -544,7 +538,6 @@ namespace dave_game{
                 World::destroyEntity(e);
             }
         }
-        cout<< "Unloaded level: " << gameInfo.level - 1 << endl;
     }
 
     void DaveGame::levelAnimation() {
@@ -902,7 +895,6 @@ namespace dave_game{
     );
 
     b2Body_SetUserData(daveBody, new ent_type{e.entity()});
-    std::cout << "Dave entity created with ID: " << e.entity().id << std::endl;
     }
 
 
@@ -1029,7 +1021,6 @@ namespace dave_game{
 
     b2Body_SetLinearVelocity(mushroomBody, {60.f / BOX_SCALE, 0.f});
 
-    std::cout << "Mushroom entity created with ID: " << e.entity().id << std::endl;
     }
 
     void DaveGame::createGhost(int startCol, int startRow)
@@ -1092,7 +1083,6 @@ namespace dave_game{
     b2Body_SetLinearVelocity(ghostBody, {60.f / BOX_SCALE, 0.f});
 
     b2Body_SetUserData(ghostBody, new ent_type{e.entity()});
-    std::cout << "GHOST entity created with ID: " << e.entity().id << std::endl;
     }
 
     void DaveGame::createBlock(SDL_FPoint p,SDL_FRect r) {
@@ -1118,7 +1108,6 @@ namespace dave_game{
             Collider{blockBody}
             );
         b2Body_SetUserData(blockBody, new ent_type{ent.entity()});
-        std::cout << "BLock entity created with ID: " << ent.entity().id << std::endl;
     }
 
     void DaveGame::createWall(SDL_FPoint p, float width, float height) const {
@@ -1159,7 +1148,6 @@ namespace dave_game{
             Drawable{RED_BLOCK, BLOCK_TEX_SCALE, true, false}
         );
         b2Body_SetUserData(wallBody, new ent_type{e.entity()});
-        std::cout << "Wall entity created with ID: " << e.entity().id << std::endl;
 
     }
 
@@ -1187,7 +1175,6 @@ namespace dave_game{
             Spikes{}
         );
         b2Body_SetUserData(spikeBody, new ent_type{ent.entity()});
-        std::cout << "Spikes entity created with ID: " << ent.entity().id << std::endl;
     }
 
     void DaveGame::createDiamond(SDL_FPoint p,SDL_FRect diamondAnimation,int value) {
@@ -1215,7 +1202,6 @@ namespace dave_game{
             Diamond{value}
         );
         b2Body_SetUserData(diamondBody, new ent_type{diamond.entity()});
-        std::cout << "Diamond entity created with ID: " << diamond.entity().id << std::endl;
     }
 
     void DaveGame::createTrophy(SDL_FPoint p) {
@@ -1245,7 +1231,6 @@ namespace dave_game{
             Trophy{}
         );
         b2Body_SetUserData(trophyBody, new ent_type{trophy.entity()});
-        std::cout << "Trophy entity created with ID: " << trophy.entity().id << std::endl;
     }
 
     void DaveGame::createDoor(SDL_FPoint p) {
@@ -1275,7 +1260,6 @@ namespace dave_game{
             Door{}
         );
         b2Body_SetUserData(doorBody, new ent_type{door.entity()});
-        std::cout << "Door entity created with ID: " << door.entity().id << std::endl;
     }
 
     void DaveGame::createMoveScreenSensor(SDL_FPoint p, bool forward, int col) {
@@ -1305,7 +1289,6 @@ namespace dave_game{
             MoveScreenSensor{forward, col}
         );
         b2Body_SetUserData(sensorBody, new ent_type{ent.entity()});
-        std::cout << "Sensor entity created with ID: " << ent.entity().id << std::endl;
 
     }
 
@@ -1324,7 +1307,6 @@ namespace dave_game{
             Position{{2 * RED_BLOCK.w * BLOCK_TEX_SCALE, 35}, 0},
             Drawable{SCORE_SPRITE, BLOCK_TEX_SCALE, true, false, true}
         );
-        std::cout << "Score label entity created with ID: " << score.entity().id << std::endl;
 
 
         auto level = Entity::create();

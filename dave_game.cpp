@@ -18,10 +18,10 @@ namespace dave_game{
 
         while (!quit) {
 
-            switch ((GameState)m_gameState) {
+            switch (m_gameState) {
                 case GameState::MENU:
                     MenuInputSystem();
-                    if (!((GameState)m_gameState == GameState::EXIT)) {
+                    if (!(m_gameState == GameState::EXIT)) {
                         RenderSystem();
                     }
                     break;
@@ -169,6 +169,12 @@ namespace dave_game{
         }
     }
 
+    void DaveGame::resetGame() {
+        gameInfo.level = 1;
+        gameInfo.score = 0;
+        gameInfo.lives = 3;
+    }
+
     void DaveGame::MenuInputSystem() {
         SDL_PumpEvents();
         const bool* keys = SDL_GetKeyboardState(nullptr);
@@ -190,6 +196,7 @@ namespace dave_game{
                 switch (m_selectedOption) {
                     case 0:
                         m_gameState = GameState::PLAYING;
+                        resetGame();
                         loadLevel(gameInfo.level);
                         break;
                     case 1:
@@ -588,7 +595,6 @@ namespace dave_game{
         unloadLevel(); // Clean up
     }
 
-
     void DaveGame::StatusBarSystem() {
         int score = gameInfo.score;
         int digit = 0;
@@ -760,8 +766,6 @@ namespace dave_game{
         }
     }
 
-
-
     /// @brief Updates animation state for entities with visual animations.
     /// Requires Animation and Image components.
     void DaveGame::AnimationSystem()
@@ -896,7 +900,6 @@ namespace dave_game{
 
     b2Body_SetUserData(daveBody, new ent_type{e.entity()});
     }
-
 
     void DaveGame::createMap(uint8_t* map, int width, int height) {
         for (int row = 0; row < height; ++row) {
@@ -1077,7 +1080,6 @@ namespace dave_game{
         Drawable{GHOST1, BLOCK_TEX_SCALE, true, false},
         Collider{ghostBody},
         Monster{},
-        //BackAndForthMotion{{1.f, 0.f}, 60.f},
         Animation{GHOST_ANIMATION, 1, 2, 0, 0, Animation::Type::GHOST}
     );
     b2Body_SetLinearVelocity(ghostBody, {60.f / BOX_SCALE, 0.f});
@@ -1292,7 +1294,6 @@ namespace dave_game{
 
     }
 
-
     void DaveGame::createStatusBar() {
         createTitles();
         createScoreBar();
@@ -1348,29 +1349,24 @@ namespace dave_game{
             Drawable{NUMBERS_SPRITES[0]},
             LevelLabel{}
         );
-        cout << "Created level icon" <<  level.entity().id <<endl;
-
         Entity health1 = Entity::create();
         health1.addAll(
             Position{{1020, 35}, 0},
             Drawable{DAVE_HEALTH, BLOCK_TEX_SCALE, true, false, true},
             LivesHead{0}
         );
-        cout << "Created health icon" <<  health1.entity().id <<endl;
         Entity health2 = Entity::create();
         health2.addAll(
             Position{{1070, 35}, 0},
             Drawable{DAVE_HEALTH, BLOCK_TEX_SCALE, true, false, true},
             LivesHead{1}
         );
-        cout << "Created health icon" <<  health2.entity().id <<endl;
         Entity health3 = Entity::create();
         health3.addAll(
             Position{{1120, 35}, 0},
             Drawable{DAVE_HEALTH, BLOCK_TEX_SCALE, true, false, true},
             LivesHead{2}
         );
-        cout << "Created health icon" <<  health3.entity().id <<endl;
     }
 
     void DaveGame::createGun(SDL_FPoint p) {
@@ -1564,28 +1560,6 @@ namespace dave_game{
         }
 
         return ent_type{-1};
-    }
-
-    void DaveGame::BackAndForthMotionSystem() {
-        static const Mask mask = MaskBuilder()
-            .set<BackAndForthMotion>()
-            .set<Position>()
-            .set<Collider>()
-            .build();
-
-        for (ent_type e{0}; e.id <= World::maxId().id; ++e.id) {
-            if (World::mask(e).test(mask)) {
-                auto& motion = World::getComponent<BackAndForthMotion>(e);
-                auto& collider = World::getComponent<Collider>(e);
-
-                b2Vec2 velocity = {
-                    motion.direction.x * motion.speed / BOX_SCALE,
-                    motion.direction.y * motion.speed / BOX_SCALE
-                };
-
-                b2Body_SetLinearVelocity(collider.b, velocity);
-            }
-        }
     }
 
     void DaveGame::renderMenuOptions() {

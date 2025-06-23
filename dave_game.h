@@ -179,18 +179,21 @@ namespace dave_game {
 
         void prepareBoxWorld();
 
-        void MovementSystem();
-        void renderGoThruTheDoor();
-        void CollisionSystem();
-        void RenderSystem();
         void InputSystem();
+        void MovementSystem();
+        void ShooterSystem();
+        void CircularMotionSystem();
+        void CollisionSystem();
+        void box_system();
         void StatusBarSystem();
         void AnimationSystem();
-        void box_system();
-        void CircularMotionSystem();
-        void ShooterSystem();
-        void BackAndForthMotionSystem();
+        void RenderSystem();
+
+
         void MenuInputSystem();
+
+        void renderGoThruTheDoor();
+        void resetGame();
 
         void loadLevel(int level);
         void unloadLevel();

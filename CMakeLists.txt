@@ -10,8 +10,6 @@ add_executable(DangerousDave main.cpp
         bagel.h
         tests.cpp
         bagel_cfg.h
-        Pacman.cpp
-        Pacman.h
         dave_game.cpp
         dave_game.h
 )

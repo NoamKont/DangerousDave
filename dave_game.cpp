@@ -508,12 +508,12 @@ namespace dave_game{
         unloadLevel();
         gameInfo.screenOffset = 0.f;
         (void)Component<Bullet>::Bit;
-        if (level == 2) {//TODO temp for DEBUG - need to switch with level 1
+        if (level == 1) {
             createMap(&map[0][0], MAP_WIDTH, MAP_HEIGHT);
             createDave(DAVE_START_COLUMN, DAVE_START_ROW);
             createGhost(DAVE_START_COLUMN + 8, 2);
             createStatusBar();
-        } else if (level == 1) {
+        } else if (level == 2) {
             SDL_FPoint batMonsterSpawnPoint = {
                 BAT_MONSTER_START_COLUMN * RED_BLOCK.w * BLOCK_TEX_SCALE,
                 BAT_MONSTER_START_ROW * RED_BLOCK.h * BLOCK_TEX_SCALE
@@ -521,7 +521,7 @@ namespace dave_game{
 
             createBatMonster(batMonsterSpawnPoint, true);
             createMushroom(DAVE_START_COLUMN + 7, DAVE_START_ROW);
-            //createGhost(DAVE_START_COLUMN + 11, DAVE_START_ROW);
+            createGhost(DAVE_START_COLUMN + 20, DAVE_START_ROW);
             createMap(&map_stage2[0][0], MAP_WIDTH * 2, MAP_HEIGHT);
             createDave(DAVE_START_COLUMN, DAVE_START_ROW);
             createStatusBar();
@@ -659,44 +659,44 @@ namespace dave_game{
                 continue;
             }
             //debug printing pyisic
-             if (World::mask(e).test(Component<Collider>::Bit))
-             {
-                 const Collider& collider = World::getComponent<Collider>(e);
-                 const auto& dr = World::getComponent<Drawable>(e);
-
-                     b2BodyId body = collider.b;
-
-                     // Get Box2D center position (in meters)
-                     b2Vec2 pos = b2Body_GetPosition(body);
-
-                     // Convert to pixels
-                     float centerX = pos.x * BOX_SCALE;
-                     float centerY = pos.y * BOX_SCALE;
-                     float w,h;
-                     if ( World::mask(e).test(Component<Wall>::Bit)) {///DEBUG
-                         const Wall& wall = World::getComponent<Wall>(e); // stores shape ID
-                         w = wall.size.x * BLOCK_TEX_SCALE;
-                         h = wall.size.y * BLOCK_TEX_SCALE;
-                     }else if ( World::mask(e).test(Component<Monster>::Bit)) {
-                         w = BAT_MONSTER_1.w * BLOCK_TEX_SCALE; // back to pixels
-                         h = BAT_MONSTER_1.h * BLOCK_TEX_SCALE;
-                     }
-                     else {
-                         w = DAVE_JUMPING.w * DAVE_TEX_SCALE; // back to pixels
-                         h = DAVE_JUMPING.h * DAVE_TEX_SCALE;
-                     }
-
-                     // Top-left corner
-                     SDL_FRect boxRect = {
-                         centerX - w/2 - (gameInfo.screenOffset * (!dr.isStatic) * WIN_WIDTH),
-                         centerY - h/2,
-                         w,
-                         h
-                     };
-                 SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
-                 SDL_RenderRect(ren, &boxRect);
-                 SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-             }
+             // if (World::mask(e).test(Component<Collider>::Bit))
+             // {
+             //     const Collider& collider = World::getComponent<Collider>(e);
+             //     const auto& dr = World::getComponent<Drawable>(e);
+             //
+             //         b2BodyId body = collider.b;
+             //
+             //         // Get Box2D center position (in meters)
+             //         b2Vec2 pos = b2Body_GetPosition(body);
+             //
+             //         // Convert to pixels
+             //         float centerX = pos.x * BOX_SCALE;
+             //         float centerY = pos.y * BOX_SCALE;
+             //         float w,h;
+             //         if ( World::mask(e).test(Component<Wall>::Bit)) {///DEBUG
+             //             const Wall& wall = World::getComponent<Wall>(e); // stores shape ID
+             //             w = wall.size.x * BLOCK_TEX_SCALE;
+             //             h = wall.size.y * BLOCK_TEX_SCALE;
+             //         }else if ( World::mask(e).test(Component<Monster>::Bit)) {
+             //             w = BAT_MONSTER_1.w * BLOCK_TEX_SCALE; // back to pixels
+             //             h = BAT_MONSTER_1.h * BLOCK_TEX_SCALE;
+             //         }
+             //         else {
+             //             w = DAVE_JUMPING.w * DAVE_TEX_SCALE; // back to pixels
+             //             h = DAVE_JUMPING.h * DAVE_TEX_SCALE;
+             //         }
+             //
+             //         // Top-left corner
+             //         SDL_FRect boxRect = {
+             //             centerX - w/2 - (gameInfo.screenOffset * (!dr.isStatic) * WIN_WIDTH),
+             //             centerY - h/2,
+             //             w,
+             //             h
+             //         };
+             //     SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
+             //     SDL_RenderRect(ren, &boxRect);
+             //     SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+             // }
 
             const auto& pos = World::getComponent<Position>(e);
             const auto& drawable = World::getComponent<Drawable>(e);

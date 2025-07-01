@@ -14,6 +14,11 @@
 #include "SDL3/SDL_render.h"
 using namespace bagel;
 namespace dave_game {
+
+    /* --------------------------------------------------------------------- */
+    /*                               Components                              */
+    /* --------------------------------------------------------------------- */
+
     /**
      * @brief Component representing an entity's position on the grid.
      */
@@ -32,6 +37,10 @@ namespace dave_game {
         bool isStatic = false;
     };
 
+    /**
+     * @brief Animation state machine: multiple states, each with @c framesCount
+     *        frames cycling at a fixed rate (handled by AnimationSystem).
+     */
     using Animation = struct {
 
         enum class Type {
@@ -90,6 +99,9 @@ namespace dave_game {
     */
     struct Background { };
 
+    /**
+     * @brief Moves back and forth in a straight line at a given speed.
+     */
     struct BackAndForthMotion {
         SDL_FPoint direction;
         float speed = 60.0f;
@@ -143,8 +155,10 @@ namespace dave_game {
         int value = 1000;
     };
 
+    ///@brief Instant-damage hazard
     struct Spikes{};
 
+    ///@brief Last bullet timestamp (ms)
     struct LastShot {
         uint32_t time = 0; // in milliseconds
     };
@@ -154,15 +168,18 @@ namespace dave_game {
     struct LevelLabel{};
     struct GunEquipedLabel{};
 
+    /** @brief Head icon representing one of Dave’s lives. */
     struct LivesHead {
         int index;
     };
 
+    /** @brief Invisible sensor that scrolls the screen when crossed. */
     struct MoveScreenSensor {
         bool forward = true;
         int col = 0;
     };
 
+    /** @brief Circular motion parameters for @ref CircularMotionSystem. */
     struct CircularMotion {
         SDL_FPoint center;  // center of the circular path (in pixels)
         float radius;
@@ -170,11 +187,17 @@ namespace dave_game {
         float angle = 0.0f;  // current angle
     };
 
+    /* --------------------------------------------------------------------- */
+    /*                                DaveGame                               */
+    /* --------------------------------------------------------------------- */
 
-
-
-
-
+    /**
+     * @brief Central façade that wires together systems, factories, and state.
+     *
+     * Owns the SDL window/renderer, Box2D world, texture atlas, and implements
+     * high-level helpers for spawning entities and running the main game loop
+     * (see implementation in *dave_game.cpp*).
+     */
     class DaveGame {
 
         void prepareBoxWorld();
@@ -226,82 +249,117 @@ namespace dave_game {
 
         void EndGame();
 
+        /* ----------------------------------------------------------------- */
+        /*                         Constants & Assets                         */
+        /* ----------------------------------------------------------------- */
 
-        static constexpr float	BOX_SCALE = 35.5f;
-        static constexpr float	DAVE_TEX_SCALE = 0.42f;
-        static constexpr float	BLOCK_TEX_SCALE = 0.56f;
+        /// @name Global scales
+        ///@{
+        static constexpr float BOX_SCALE      = 35.5f; ///< Pixels per Box2D meter
+        static constexpr float DAVE_TEX_SCALE = 0.42f; ///< Dave sprite scale
+        static constexpr float BLOCK_TEX_SCALE= 0.56f; ///< Tile/block scale
+        ///@}
 
-
-        static constexpr SDL_FRect DAVE_HEALTH{ 1419, 804, 79, 75 };
-        static constexpr SDL_FRect SCORE_SPRITE{1082, 694, 280, 71};
+        /** @name HUD sprite rects (texture atlas coordinates) */
+        ///@{
+        static constexpr SDL_FRect DAVE_HEALTH {1419, 804,  79,  75};
+        static constexpr SDL_FRect SCORE_SPRITE{1082, 694, 280,  71};
         static constexpr SDL_FRect HEALTH_SPRITE{1082, 804, 273, 70};
-        static constexpr SDL_FRect LEVEL_SPRITE{1082, 912, 287, 70};
+        static constexpr SDL_FRect LEVEL_SPRITE {1082, 912, 287, 70};
+        ///@}
 
+        /** @name Dave sprites */
+        ///@{
+        static constexpr SDL_FRect DAVE_STANDING { 75,  38, 109, 155};
+        static constexpr SDL_FRect DAVE_WALKING_1{223, 38, 117, 155};
+        static constexpr SDL_FRect DAVE_WALKING_2{373, 38, 117, 155};
+        static constexpr SDL_FRect DAVE_IDLE     { 75, 38, 109, 155};
+        static constexpr SDL_FRect DAVE_JUMPING  {676, 38, 131, 155};
+        ///@}
 
-        static constexpr SDL_FRect DAVE_STANDING{ 75, 38, 109, 155 };
-        static constexpr SDL_FRect DAVE_WALKING_1{223,38,117,155};
-        static constexpr SDL_FRect DAVE_WALKING_2{373,38,117,155};
-        static constexpr SDL_FRect DAVE_IDLE{ 75, 38, 109, 155 };
-        static constexpr SDL_FRect DAVE_JUMPING{676,38,131,155};
+        /** @name Bat monster sprites */
+        ///@{
+        static constexpr SDL_FRect BAT_MONSTER_1{840, 521, 122, 113};
+        static constexpr SDL_FRect BAT_MONSTER_2{683, 521, 147, 111};
+        ///@}
 
-        static constexpr SDL_FRect BAT_MONSTER_1{840,521,122,113};
-        static constexpr SDL_FRect BAT_MONSTER_2{683,521,147,111};
+        /** @name Environment tiles */
+        ///@{
+        static constexpr SDL_FRect RED_BLOCK{221, 218, 118, 118};
+        static constexpr SDL_FRect DIAMOND  {231, 370, 118, 117};
+        static constexpr SDL_FRect RED_DIAMOND{ 75, 370, 118, 118};
+        static constexpr SDL_FRect DOOR     {525, 366, 118, 118};
+        static constexpr SDL_FRect TROPHY   {373, 370, 118, 118};
+        ///@}
 
-        static constexpr SDL_FRect RED_BLOCK{ 221, 218, 118, 118 };
-        static constexpr SDL_FRect DIAMOND{ 231, 370, 118, 117 };
-        static constexpr SDL_FRect RED_DIAMOND{ 75, 370, 118, 118 };
-        static constexpr SDL_FRect DOOR{ 525, 366, 118, 118 };
-        static constexpr SDL_FRect TROPHY{ 373, 370, 118, 118 };
-        static constexpr SDL_FRect GUN{ 1396, 890, 118, 118 };
-        static constexpr SDL_FRect BULLET{ 1538, 917, 53, 24 };
-        static constexpr SDL_FRect MONSTER_BULLET{ 1535, 966, 53, 24 };
+        /** @name Weapons & projectiles */
+        ///@{
+        static constexpr SDL_FRect GUN           {1396, 890, 118, 118};
+        static constexpr SDL_FRect BULLET        {1538, 917,  53,  24};
+        static constexpr SDL_FRect MONSTER_BULLET{1535, 966,  53,  24};
+        ///@}
 
-        static constexpr SDL_FRect SAND{ 525, 218, 118, 118 };
-        static constexpr SDL_FRect SKY{ 66, 667, 118, 118 };
+        /** @name Background fillers */
+        ///@{
+        static constexpr SDL_FRect SAND{525, 218, 118, 118};
+        static constexpr SDL_FRect SKY { 66, 667, 118, 118};
+        ///@}
 
+        /** @name Fire animation (decoration) */
+        ///@{
+        static constexpr SDL_FRect FIRE1{1674, 189, 83, 104};
+        static constexpr SDL_FRect FIRE2{1790, 196, 84,  95};
+        ///@}
 
-        static constexpr SDL_FRect FIRE1{ 1674, 189, 83, 104 };
-        static constexpr SDL_FRect FIRE2{ 1790, 196, 84, 95 };
+        /** Hazard tile */
+        static constexpr SDL_FRect SPIKES{839, 235, 118, 118};
 
-        static constexpr SDL_FRect SPIKES{ 839, 235, 118, 118 };
+        /** @name Mushroom enemy sprites (8-frame walk) */
+        ///@{
+        static constexpr SDL_FRect MUSHROOM1{1096, 179, 75, 120};
+        static constexpr SDL_FRect MUSHROOM2{1294, 179, 75, 120};
+        static constexpr SDL_FRect MUSHROOM3{1491, 179, 75, 120};
+        static constexpr SDL_FRect MUSHROOM4{1688, 179, 75, 120};
+        static constexpr SDL_FRect MUSHROOM5{1885, 179, 75, 120};
+        static constexpr SDL_FRect MUSHROOM6{2082, 179, 75, 120};
+        static constexpr SDL_FRect MUSHROOM7{2279, 179, 75, 120};
+        static constexpr SDL_FRect MUSHROOM8{2476, 179, 75, 120};
+        ///@}
 
+        /** @name Ghost enemy sprites */
+        ///@{
+        static constexpr SDL_FRect GHOST1{ 66, 520, 116, 120};
+        static constexpr SDL_FRect GHOST2{216, 520, 116, 120};
+        ///@}
 
-
-        static constexpr SDL_FRect MUSHROOM1{ 1096, 179, 75, 120 };
-        static constexpr SDL_FRect MUSHROOM2{ 1294, 179, 75, 120 };
-        static constexpr SDL_FRect MUSHROOM3{ 1491, 179, 75, 120 };
-        static constexpr SDL_FRect MUSHROOM4{ 1688, 179, 75, 120 };
-        static constexpr SDL_FRect MUSHROOM5{ 1885, 179, 75, 120 };
-        static constexpr SDL_FRect MUSHROOM6{ 2082, 179, 75, 120 };
-        static constexpr SDL_FRect MUSHROOM7{ 2279, 179, 75, 120 };
-        static constexpr SDL_FRect MUSHROOM8{ 2476, 179, 75, 120 };
-
-        static constexpr SDL_FRect GHOST1{ 66, 520, 116, 120 };
-        static constexpr SDL_FRect GHOST2{216, 520, 116, 120 };
-
-        static constexpr SDL_FRect LOGO{72, 668, 690, 207 };
+        /** @name Menu graphics */
+        ///@{
+        static constexpr SDL_FRect LOGO{72, 668, 690, 207};
         static constexpr SDL_Point LOGO_POS{308, 80};
 
-        static constexpr SDL_FRect START_GAME{2096, 700, 300, 120 };
-        static constexpr SDL_FRect EXIT{2097, 428, 300, 120 };
-        static constexpr SDL_FRect START_GAME_SELECTED{2096, 835, 300, 120 };
-        static constexpr SDL_FRect EXIT_SELECTED{2096, 558, 300, 120 };
-
+        static constexpr SDL_FRect START_GAME{2096, 700, 300, 120};
+        static constexpr SDL_FRect EXIT      {2097, 428, 300, 120};
+        static constexpr SDL_FRect START_GAME_SELECTED{2096, 835, 300, 120};
+        static constexpr SDL_FRect EXIT_SELECTED      {2096, 558, 300, 120};
 
         static constexpr SDL_Point START_GAME_POS{503, 400};
-        static constexpr SDL_Point EXIT_POS{503, 600};
+        static constexpr SDL_Point EXIT_POS      {503, 600};
+        ///@}
 
-        static constexpr SDL_FRect SCORE_1{ 1671, 738, 40, 73 };
-        static constexpr SDL_FRect SCORE_2{ 1740, 738, 60, 70 };
-        static constexpr SDL_FRect SCORE_3{ 1808, 738, 60, 71 };
-        static constexpr SDL_FRect SCORE_4{ 1886, 738, 64, 70 };
-        static constexpr SDL_FRect SCORE_5{ 1967, 738, 55, 70 };
+        /** @name Score digit sprites (0-9) */
+        ///@{
+        static constexpr SDL_FRect SCORE_1{1671, 738, 40, 73};
+        static constexpr SDL_FRect SCORE_2{1740, 738, 60, 70};
+        static constexpr SDL_FRect SCORE_3{1808, 738, 60, 71};
+        static constexpr SDL_FRect SCORE_4{1886, 738, 64, 70};
+        static constexpr SDL_FRect SCORE_5{1967, 738, 55, 70};
 
-        static constexpr SDL_FRect SCORE_6{ 1671, 842, 56, 68 };
-        static constexpr SDL_FRect SCORE_7{ 1740, 842, 61, 68 };
-        static constexpr SDL_FRect SCORE_8{ 1814, 842, 60, 68 };
-        static constexpr SDL_FRect SCORE_9{ 1887, 842, 59, 68 };
-        static constexpr SDL_FRect SCORE_0{ 1961, 842, 60, 68 };
+        static constexpr SDL_FRect SCORE_6{1671, 842, 56, 68};
+        static constexpr SDL_FRect SCORE_7{1740, 842, 61, 68};
+        static constexpr SDL_FRect SCORE_8{1814, 842, 60, 68};
+        static constexpr SDL_FRect SCORE_9{1887, 842, 59, 68};
+        static constexpr SDL_FRect SCORE_0{1961, 842, 60, 68};
+        ///@}
 
         bool skipSensorEvents = false;
 

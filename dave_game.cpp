@@ -1,3 +1,17 @@
+/**
+
+@file dave_game.cpp
+
+@brief Core loop and gameplay systems for the Dangerous Niv game.
+
+Uses BAGEL’s ECS, SDL3 for rendering/input, and Box2D for physics.
+
+Handles window/renderer setup, level loading, per-frame system dispatch,
+
+and full game-state management (menu, playing, exit).
+
+*/
+
 #include "dave_game.h"
 #include "bagel.h"
 #include <iostream>
@@ -10,6 +24,14 @@
 using namespace bagel;
 using namespace std;
 namespace dave_game{
+
+    /**
+     * @brief Main game loop.
+     *
+     * Dispatches systems according to #m_gameState, processes SDL events,
+     * enforces a fixed-rate frame of @c GAME_FRAME ms, and exits when the user
+     * chooses to quit.
+     */
     void DaveGame::run()
     {
         SDL_SetRenderDrawColor(ren, 0,0,0,255);
@@ -61,6 +83,13 @@ namespace dave_game{
         }
     }
 
+
+    /**
+     * @brief Constructor – initializes SDL, Box2D world, and loads the level.
+     *
+     * If window/renderer/texture creation fails, the instance remains in an
+     * invalid state and ::run will immediately exit.
+     */
     DaveGame::DaveGame() {
         if (!prepareWindowAndTexture())
             return;
@@ -93,6 +122,11 @@ namespace dave_game{
         SDL_Quit();
     }
 
+        /**
+     * @brief Creates SDL window, renderer, and loads the main texture atlas.
+     *
+     * @return @c true on success, @c false on failure (errors logged to stdout).
+     */
     bool DaveGame::prepareWindowAndTexture()
     {
         if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -120,6 +154,9 @@ namespace dave_game{
         return true;
     }
 
+        /**
+     * @brief Initializes the Box2D world with Earth-like gravity.
+     */
     void DaveGame::prepareBoxWorld()
     {
         b2WorldDef worldDef = b2DefaultWorldDef();
@@ -169,12 +206,24 @@ namespace dave_game{
         }
     }
 
+        /**
+     * @brief Resets overall game progress (score, lives, level).
+     *
+     * Called when a new game starts from the main menu.
+     */
     void DaveGame::resetGame() {
         gameInfo.level = 1;
         gameInfo.score = 0;
         gameInfo.lives = 3;
     }
 
+        /**
+     * @brief Handles keyboard navigation and selection inside the main menu.
+     *
+     * Advances or retreats the highlighted option with ↑/↓ and activates an
+     * option with ⏎ or Space.  Imposes a small debounce delay to avoid
+     * accidental double-inputs.
+     */
     void DaveGame::MenuInputSystem() {
         SDL_PumpEvents();
         const bool* keys = SDL_GetKeyboardState(nullptr);
@@ -298,6 +347,13 @@ namespace dave_game{
         }
     }
 
+
+    /**
+     * @brief Makes “Go through the door” labels and doors visible/open.
+     *
+     * Invoked after collecting the level’s trophy so the player knows the exit
+     * is unlocked.
+     */
     void DaveGame::renderGoThruTheDoor() {
         static const Mask labelMask = MaskBuilder()
                    .set<DoorLabel>()
@@ -322,6 +378,12 @@ namespace dave_game{
         }
     }
 
+    /**
+     * @brief Processes all Box2D sensor events and triggers game reactions.
+     *
+     * Handles player pickups, enemy damage, screen scrolling, death, etc., by
+     * inspecting component masks attached to the interacting bodies.
+     */
     void DaveGame::CollisionSystem()
     {
         if (skipSensorEvents) return;
@@ -472,8 +534,12 @@ namespace dave_game{
     }
 
     /**
-    * @brief Synchronizes Box2D world step and updates entity positions and angles from physics bodies.
-    */
+     * @brief Advances the physics simulation and syncs ECS positions/angles.
+     *
+     * Steps the Box2D world by a fixed time slice and then writes updated
+     * positions back into each entity’s `Position` component (expressed in
+     * pixels).
+     */
 
     void DaveGame::box_system()
     {
@@ -504,6 +570,16 @@ namespace dave_game{
         }
     }
 
+    /**
+     * @brief Loads a game level by number.
+     *
+     * Destroys the current level (via unloadLevel), resets the screen offset,
+     * and spawns all entities required for the specified level.
+     *
+     * @param level Index of the level to load (1-based).
+     *              *Level 1* = intro stage, *Level 2* = cave stage.
+     *              Any other value ends the game and returns to the menu.
+     */
     void DaveGame::loadLevel(int level) {
         unloadLevel();
         gameInfo.screenOffset = 0.f;
@@ -531,6 +607,12 @@ namespace dave_game{
         }
     }
 
+        /**
+     * @brief Destroys every entity in the current level and frees Box2D bodies.
+     *
+     * Iterates over all entities; if they possess a @c Collider, their physics
+     * body is destroyed as well.
+     */
     void DaveGame::unloadLevel() {
         Mask required = MaskBuilder()
             .set<Collider>()
@@ -547,6 +629,13 @@ namespace dave_game{
         }
     }
 
+    /**
+     * @brief Short cut-scene: Dave walks automatically to the screen’s edge.
+     *
+     * Replaces the current map with the “walking” tileset, spawns Dave at the
+     * left, forces him to walk right until he reaches the last column, renders
+     * each frame, and then unloads the temporary level.
+     */
     void DaveGame::levelAnimation() {
         unloadLevel();
         createMap(&walkingMap[0][0], MAP_WIDTH, 5);
@@ -595,6 +684,12 @@ namespace dave_game{
         unloadLevel(); // Clean up
     }
 
+        /**
+     * @brief Updates score, level, and life icons on the status bar.
+     *
+     * Converts @c gameInfo.score into sprites, updates level digits, and hides
+     * life heads when lives are lost.
+     */
     void DaveGame::StatusBarSystem() {
         int score = gameInfo.score;
         int digit = 0;
@@ -740,6 +835,12 @@ namespace dave_game{
         SDL_RenderPresent(ren);
     }
 
+    /**
+     * @brief Applies circular motion to entities that have @c CircularMotion.
+     *
+     * The entity’s physics body is moved along a radius around @c center by
+     * incrementing the stored @c angle each frame.
+     */
     void DaveGame::CircularMotionSystem()
     {
         static const Mask mask = MaskBuilder()
@@ -766,8 +867,12 @@ namespace dave_game{
         }
     }
 
-    /// @brief Updates animation state for entities with visual animations.
-    /// Requires Animation and Image components.
+    /**
+     * @brief Advances animations for entities possessing @c Animation & Drawable.
+     *
+     * Uses a simple frame counter to switch sprites every
+     * #ANIMATION_INTERVAL frames.
+     */
     void DaveGame::AnimationSystem()
     {
         static int frameCounter = 0;
@@ -804,7 +909,17 @@ namespace dave_game{
         frameCounter = 0;
     }
 
-    /// @brief Creates the player entity (Dave) with default attributes.
+    /**
+     * @brief Spawns the player character (“Dave”) at a map cell.
+     *
+     * Sets up a dynamic Box2D body, sensor for ground detection, input controls,
+     * animation states, and all default components.
+     *
+     * @param startCol Column index (tile units) where Dave’s leftmost pixel
+     *                 should appear.
+     * @param startRow Row index (tile units) where Dave’s top-most pixel
+     *                 should appear.
+     */
     void DaveGame::createDave(int startCol, int startRow)
     {
     // Calculate top-left corner of Dave's starting cell in pixels
@@ -966,6 +1081,15 @@ namespace dave_game{
         }
     }
 
+    /**
+     * @brief Spawns a walking mushroom enemy.
+     *
+     * Creates a kinematic Box2D body, attaches an 8-frame walking
+     * animation, marks it as a @c Monster, and gives it an initial velocity.
+     *
+     * @param startCol Tile column where the mushroom’s left edge starts.
+     * @param startRow Tile row   where the mushroom’s top  edge starts.
+     */
     void DaveGame::createMushroom(int startCol, int startRow)
     {
     SDL_FPoint topLeft = {
@@ -1026,6 +1150,14 @@ namespace dave_game{
 
     }
 
+    /**
+     * @brief Spawns a ghost enemy that floats horizontally.
+     *
+     * Similar to #createMushroom but uses a 2-frame animation.
+     *
+     * @param startCol Tile column for the ghost’s left edge.
+     * @param startRow Tile row    for the ghost’s top  edge.
+     */
     void DaveGame::createGhost(int startCol, int startRow)
     {
     SDL_FPoint topLeft = {
@@ -1087,6 +1219,12 @@ namespace dave_game{
     b2Body_SetUserData(ghostBody, new ent_type{e.entity()});
     }
 
+    /**
+     * @brief Creates a single decorative block (non-interactive collider).
+     *
+     * @param p Top-left corner in pixel coordinates.
+     * @param r Source rectangle within the texture atlas.
+     */
     void DaveGame::createBlock(SDL_FPoint p,SDL_FRect r) {
         SDL_FPoint center = {
             p.x + r.w * BLOCK_TEX_SCALE / 2.0f,
@@ -1112,6 +1250,15 @@ namespace dave_game{
         b2Body_SetUserData(blockBody, new ent_type{ent.entity()});
     }
 
+    /**
+     * @brief Creates a static wall of arbitrary size.
+     *
+     * Adds @c Wall metadata so the collision system can treat it specially.
+     *
+     * @param p      Top-left corner in pixels.
+     * @param width  Width  in texture pixels (pre-scale).
+     * @param height Height in texture pixels (pre-scale).
+     */
     void DaveGame::createWall(SDL_FPoint p, float width, float height) const {
         SDL_FPoint center = {
             p.x + width * BLOCK_TEX_SCALE / 2.0f,
@@ -1153,6 +1300,13 @@ namespace dave_game{
 
     }
 
+    /**
+     * @brief Spawns a stationary spike hazard.
+     *
+     * Any contact with this entity reduces the player’s lives.
+     *
+     * @param p Top-left position in pixels.
+     */
     void DaveGame::createSpikes(SDL_FPoint p) {
         SDL_FPoint center = {
             p.x + SPIKES.w * BLOCK_TEX_SCALE / 2.0f,
@@ -1179,6 +1333,13 @@ namespace dave_game{
         b2Body_SetUserData(spikeBody, new ent_type{ent.entity()});
     }
 
+    /**
+     * @brief Spawns a collectible diamond worth a given score value.
+     *
+     * @param p                Top-left corner in pixels.
+     * @param diamondAnimation Sprite frame (or atlas rect) to display.
+     * @param value            Score points awarded when collected.
+     */
     void DaveGame::createDiamond(SDL_FPoint p,SDL_FRect diamondAnimation,int value) {
 
         SDL_FPoint center = {
@@ -1206,6 +1367,11 @@ namespace dave_game{
         b2Body_SetUserData(diamondBody, new ent_type{diamond.entity()});
     }
 
+    /**
+     * @brief Spawns a trophy collectible (usually key to finishing a level).
+     *
+     * @param p Top-left position in pixels.
+     */
     void DaveGame::createTrophy(SDL_FPoint p) {
 
         SDL_FPoint center = {
@@ -1235,6 +1401,11 @@ namespace dave_game{
         b2Body_SetUserData(trophyBody, new ent_type{trophy.entity()});
     }
 
+    /**
+     * @brief Spawns an exit door.  Becomes passable when opened.
+     *
+     * @param p Top-left corner in pixels.
+     */
     void DaveGame::createDoor(SDL_FPoint p) {
 
         SDL_FPoint center = {
@@ -1264,6 +1435,13 @@ namespace dave_game{
         b2Body_SetUserData(doorBody, new ent_type{door.entity()});
     }
 
+    /**
+     * @brief Creates an invisible sensor that triggers screen scrolling.
+     *
+     * @param p       Top-left position in pixels.
+     * @param forward @c true  = scroll right, @c false = scroll left.
+     * @param col     Tile column index used by the sensor logic.
+     */
     void DaveGame::createMoveScreenSensor(SDL_FPoint p, bool forward, int col) {
 
         SDL_FPoint center = {
@@ -1294,6 +1472,9 @@ namespace dave_game{
 
     }
 
+    /**
+     * @brief Generates the full status bar: titles, score digits, level, lives.
+     */
     void DaveGame::createStatusBar() {
         createTitles();
         createScoreBar();
@@ -1301,6 +1482,9 @@ namespace dave_game{
 
     }
 
+    /**
+     * @brief Creates the static text sprites (“SCORE”, “LEVEL”, “DAVES”, etc.).
+     */
     void DaveGame::createTitles() {
 
         auto score = Entity::create();
@@ -1330,6 +1514,12 @@ namespace dave_game{
         );
     }
 
+    /**
+     * @brief Creates and positions the on-screen score digits.
+     *
+     * Exactly #SCORE_DIGITS_COUNT entities are spawned, each starting with
+     * a placeholder sprite that will be updated by #StatusBarSystem.
+     */
     void DaveGame::createScoreBar() {
         for (int i = 0; i < SCORE_DIGITS_COUNT; ++i) {
             auto entity = Entity::create();
@@ -1341,6 +1531,13 @@ namespace dave_game{
         }
     }
 
+    /**
+     * @brief Creates the level digit and three Dave-head icons representing lives.
+     *
+     * The level digit starts at zero and will be updated by @ref StatusBarSystem.
+     * The three life heads get indices 0-2 so #StatusBarSystem can hide them
+     * as lives are lost.
+     */
     void DaveGame::createLevelAndHealth() {
 
         Entity level = Entity::create();
@@ -1369,6 +1566,14 @@ namespace dave_game{
         );
     }
 
+    /**
+     * @brief Spawns a collectible gun power-up.
+     *
+     * When Dave touches it, the gun entity is destroyed and the player gains
+     * the @c Gun component (handled in the collision system).
+     *
+     * @param p Top-left corner of the gun sprite in pixel coordinates.
+     */
     void DaveGame::createGun(SDL_FPoint p) {
 
         SDL_FPoint center = {
@@ -1396,6 +1601,15 @@ namespace dave_game{
         b2Body_SetUserData(gunBody, new ent_type{gun.entity()});
     }
 
+    /**
+     * @brief Fires a player bullet from Dave’s position.
+     *
+     * The bullet is a kinematic sensor so it won’t affect physics bodies but
+     * will trigger sensor events on contact.
+     *
+     * @param davePos   Center position of Dave in pixels.
+     * @param goingLeft @c true = bullet moves left, @c false = right.
+     */
     void DaveGame::createBullet(SDL_FPoint davePos, bool goingLeft) {
 
         constexpr float bulletSpeed = 8.f;
@@ -1434,6 +1648,15 @@ namespace dave_game{
         b2Body_SetUserData(bulletBody, new ent_type{bullet.entity()});
     }
 
+    /**
+     * @brief Fires a bullet from a monster (looks different from player bullet).
+     *
+     * The bullet is tagged with both @c Bullet and @c Monster so collision
+     * logic can distinguish its origin.
+     *
+     * @param monsterPos Center position of the shooter in pixels.
+     * @param goingLeft  Direction of travel.
+     */
     void DaveGame::createMonsterBullet(SDL_FPoint monsterPos, bool goingLeft) {
 
         constexpr float bulletSpeed = 8.f;
@@ -1473,6 +1696,12 @@ namespace dave_game{
         b2Body_SetUserData(bulletBody, new ent_type{bullet.entity()});
     }
 
+    /**
+     * @brief Cleans up after game over: destroys dynamic entities & hides HUD.
+     *
+     * Removes all entities, destroys Box2D bodies, but keeps static HUD sprites
+     * that have @c Drawable::isStatic == true.
+     */
     void DaveGame::EndGame() {
         Mask required = MaskBuilder()
             .set<Collider>()
@@ -1500,6 +1729,14 @@ namespace dave_game{
         }
     }
 
+    /**
+     * @brief Spawns a bat monster that circles around a center point.
+     *
+     * Optionally equips it with a gun so it can shoot at intervals.
+     *
+     * @param p            Top-left corner where the bat should appear.
+     * @param isGunMonster If @c true, adds @c Gun and @c LastShot components.
+     */
     void DaveGame::createBatMonster(SDL_FPoint p, bool isGunMonster) {
         // Step 1: Correct center calculation (scaled)
         SDL_FPoint center = {
@@ -1551,6 +1788,11 @@ namespace dave_game{
         b2Body_SetUserData(monsterBody, new ent_type{monster.entity()});
     }
 
+    /**
+     * @brief Returns the entity ID of the floating “gun equipped” label, if any.
+     *
+     * @return Entity with @c GunEquipedLabel, or {-1} if none exists.
+     */
     ent_type DaveGame::getGunEquipedEntity() {
         for (int i = 0; i <= World::maxId().id; ++i) {
             ent_type e{i};
@@ -1562,6 +1804,11 @@ namespace dave_game{
         return ent_type{-1};
     }
 
+    /**
+     * @brief Renders the main menu logo and highlights the selected option.
+     *
+     * Uses #m_selectedOption to switch between “Start Game” and “Exit”.
+     */
     void DaveGame::renderMenuOptions() {
         SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
         SDL_RenderClear(ren);

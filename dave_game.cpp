@@ -1544,6 +1544,7 @@ namespace dave_game{
                 Position{{(i+1) * 40.f + 210, 35}, 0},
                 Drawable{NUMBERS_SPRITES[i+5]},
                 ScoreLabel{}
+
             );
         }
     }

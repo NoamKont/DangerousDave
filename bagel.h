@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstring>
 #include <algorithm>
+#include <iostream>
 #include <type_traits>
 
 namespace bagel
@@ -254,6 +255,7 @@ namespace bagel
 			if (_ids.size() > 0)
 				return _ids.pop();
 			_masks.push(Mask{});
+			std::cout << "Creating entity with id: " << _maxId.id + 1 << " / " << _ids.capacity() << std::endl;
 			return {++_maxId.id};
 		}
 		static void destroyEntity(ent_type ent) {
@@ -289,7 +291,7 @@ namespace bagel
 
 			if constexpr (Params.AggregateUpdates) {
 				Mask next = _masks[e.id];
-				//_added.push({prev,next,e});
+				_added.push({prev,next,e});
 			}
 		}
 		template <class T, class...Ts>
@@ -316,13 +318,13 @@ namespace bagel
 			_callbacks[Component<T>::Index] = cb;
 		}
 
-		// static size_type sizeAdded() { return _added.size(); }
-		// static const AddedMask& getAdded(int i) { return _added[i]; }
-		//
-		// static void step() { _added.clear(); }
+		static size_type sizeAdded() { return _added.size(); }
+		static const AddedMask& getAdded(int i) { return _added[i]; }
+
+		static void step() { _added.clear(); }
 	private:
 		static inline StorageCallbacks _callbacks[Params.MaxComponents] = {nullptr};
-		//static inline Bag<AddedMask,1000>		_added;
+		static inline Bag<AddedMask,Params.IdBagSize>		_added;
 
 		static inline ent_type								_maxId{-1};
 		static inline Bag<Mask,		Params.InitialEntities> _masks;

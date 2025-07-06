@@ -15,6 +15,7 @@ and full game-state management (menu, playing, exit).
 #include "dave_game.h"
 #include "bagel.h"
 #include <iostream>
+#include <vector>
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include <box2d/box2d.h>
@@ -429,6 +430,7 @@ namespace dave_game{
             else if (sensorIsDave && visitorIsDiamond) {
                 auto& diamond = World::getComponent<Diamond>(*visitorEntity);
                 gameInfo.score +=  diamond.value;
+                std::cout << "score: " << gameInfo.score << std::endl;
                 World::destroyEntity(*visitorEntity);
                 b2DestroyBody(visitor);
             }
@@ -443,6 +445,7 @@ namespace dave_game{
             else if (sensorIsDave && visitorIsTrophy) {
                 auto& trophy = World::getComponent<Trophy>(*visitorEntity);
                 gameInfo.score += trophy.value; // Increase score by 100 for collecting a trophy
+                std::cout << "score: " << gameInfo.score << std::endl;
                 World::destroyEntity(*visitorEntity);
                 b2DestroyBody(visitor);
                 renderGoThruTheDoor();
@@ -583,22 +586,22 @@ namespace dave_game{
     void DaveGame::loadLevel(int level) {
         unloadLevel();
         gameInfo.screenOffset = 0.f;
-        (void)Component<Bullet>::Bit;
+        //(void)Component<Bullet>::Bit;
         if (level == 1) {
             createMap(&map[0][0], MAP_WIDTH, MAP_HEIGHT);
             createDave(DAVE_START_COLUMN, DAVE_START_ROW);
             createGhost(DAVE_START_COLUMN + 8, 2);
             createStatusBar();
         } else if (level == 2) {
+            createMap(&map_stage2[0][0], MAP_WIDTH * 2, MAP_HEIGHT);
+
             SDL_FPoint batMonsterSpawnPoint = {
                 BAT_MONSTER_START_COLUMN * RED_BLOCK.w * BLOCK_TEX_SCALE,
                 BAT_MONSTER_START_ROW * RED_BLOCK.h * BLOCK_TEX_SCALE
             };
-
             createBatMonster(batMonsterSpawnPoint, true);
             createMushroom(DAVE_START_COLUMN + 7, DAVE_START_ROW);
             createGhost(DAVE_START_COLUMN + 20, DAVE_START_ROW);
-            createMap(&map_stage2[0][0], MAP_WIDTH * 2, MAP_HEIGHT);
             createDave(DAVE_START_COLUMN, DAVE_START_ROW);
             createStatusBar();
         } else {
@@ -617,13 +620,27 @@ namespace dave_game{
         Mask required = MaskBuilder()
             .set<Collider>()
             .build();
+
+        // Collect all entities that need physics body cleanup FIRST
+        std::vector<std::pair<ent_type, b2BodyId>> entitiesToDestroy;
+
         for (id_type id = 0; id <= World::maxId().id; ++id) {
             ent_type e{id};
             if (World::mask(e).test(required)) {
                 auto& c = World::getComponent<Collider>(e);
-                World::destroyEntity(e);
-                b2DestroyBody(c.b);
-            }else {
+                entitiesToDestroy.push_back({e, c.b});
+            }
+        }
+
+        // Now destroy all physics bodies
+        for (auto& [entity, body] : entitiesToDestroy) {
+            b2DestroyBody(body);
+        }
+
+        // Finally destroy all entities
+        for (id_type id = 0; id <= World::maxId().id; ++id) {
+            ent_type e{id};
+            if (World::mask(e).ctz() != -1) { // Check if entity still exists
                 World::destroyEntity(e);
             }
         }
